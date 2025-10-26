@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #555;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 10px 38px 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            box-sizing: border-box;
+            height: 42px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .toggle-password:hover {
+            color: #28a745;
+        }
+
+        .remember-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .remember-group input {
+            margin-right: 8px;
+        }
+
+        button {
+            width: 100%;
+            background-color: #28a745;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .alert {
+            background-color: #ffdddd;
+            color: #d8000c;
+            padding: 12px;
+            border-left: 4px solid red;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+        .alert {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        /* ❌ Lỗi (đỏ) */
+        .alert-error {
+            background-color: #ffdddd;
+            color: #d8000c;
+            border-left: 4px solid red;
+        }
+
+        /* ✅ Thành công (xanh) */
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .form-footer a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h1>Admin Login</h1>
+
+    <!-- Hiển thị lỗi -->
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <!-- Hiển thị thành công -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div th:if="${param.changed}">
+        <div class="alert alert-success">
+            Đổi mật khẩu thành công! Vui lòng đăng nhập lại.
+        </div>
+    </div>
+
+
+    <form th:action="@{/admin/account/login}" method="post">
+        <div class="form-group">
+            <label for="username">Email:</label>
+            <div class="input-wrapper">
+                <input type="text" id="username" name="username" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <div class="input-wrapper">
+                <input type="password" id="password" name="password" required>
+                <span class="toggle-password" id="togglePassword">👁️</span>
+            </div>
+        </div>
+
+        <div class="remember-group">
+            <input type="checkbox" id="remember" name="remember">
+            <label for="remember">Remember me</label>
+        </div>
+
+        <button type="submit">Login</button>
+
+        <div class="form-footer">
+            <span>Quên mật khẩu? </span>
+            <a th:href="@{/admin/account/forgot-password}">Đặt lại mật khẩu tại đây</a>
+        </div>
+
+        <div class="form-footer">
+            <span>Chưa có tài khoản? </span>
+            <a th:href="@{/admin/account/register}">Đăng ký tại đây</a>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    const togglePasswordIcon = document.getElementById('togglePassword');
+    togglePasswordIcon.addEventListener('click', function () {
+        const input = document.getElementById('password');
+        if (input.type === 'password') {
+            input.type = 'text';
+            this.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            this.textContent = '👁️';
+        }
+    });
+</script>
+</body>
+</html>

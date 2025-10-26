@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký Admin</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .register-container {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #555;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 10px 38px 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+            height: 42px;
+            box-sizing: border-box;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            transition: color 0.3s ease;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-password:hover,
+        .toggle-password.active {
+            color: #28a745;
+        }
+
+        button {
+            width: 100%;
+            background-color: #28a745;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .alert {
+            background-color: #ffdddd;
+            color: #d8000c;
+            padding: 12px;
+            border-left: 4px solid red;
+            margin-bottom: 20px;
+            border-radius: 6px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .switch-link {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .switch-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .switch-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <h2>Đăng ký Tài khoản Quản trị</h2>
+
+    <!-- Hiển thị lỗi -->
+    <div th:if="${error}" class="alert" th:text="${error}"></div>
+
+    <!-- Hiển thị thành công -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <form th:action="@{/admin/account/register}" method="post">
+        <div class="form-group">
+            <label>Họ tên:</label>
+            <div class="input-wrapper">
+                <input type="text" name="name" th:value="${name}" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Email:</label>
+            <div class="input-wrapper">
+                <input type="email" name="email" th:value="${email}" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Mật khẩu:</label>
+            <div class="input-wrapper">
+                <input type="password" name="password" id="password" required>
+                <span class="toggle-password" data-toggle="password">👁️</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Xác nhận mật khẩu:</label>
+            <div class="input-wrapper">
+                <input type="password" name="confirmPassword" id="confirmPassword" required>
+                <span class="toggle-password" data-toggle="confirmPassword">👁️</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button type="submit">Đăng ký</button>
+        </div>
+
+        <div class="switch-link">
+            Đã có tài khoản? <a th:href="@{/admin/login}">Đăng nhập</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.querySelectorAll('.toggle-password').forEach(icon => {
+        icon.addEventListener('click', () => {
+            const inputId = icon.getAttribute('data-toggle');
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = '🙈';
+                icon.classList.add('active');
+            } else {
+                input.type = 'password';
+                icon.textContent = '👁️';
+                icon.classList.remove('active');
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .top-navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #343a40;
+            color: white;
+            padding: 10px 20px;
+        }
+        .navbar-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .navbar-user {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+        .navbar-user .dropdown {
+            position: relative;
+        }
+        .navbar-user .dropdown a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 12px;
+        }
+        .navbar-user .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            color: black;
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            list-style: none;
+            padding: 8px 0;
+        }
+        .navbar-user .dropdown-menu li a {
+            display: block;
+            color: #333;
+            padding: 8px 20px;
+            text-decoration: none;
+        }
+        .navbar-user .dropdown-menu li a:hover {
+            background-color: #f8f9fa;
+        }
+        .navbar-user .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Đây là fragment (giống include EJS) -->
+<nav class="top-navbar" th:fragment="navbar">
+    <span class="navbar-title">📊 Admin</span>
+    <ul class="navbar-user">
+        <li class="dropdown">
+            <a class="dropdown-toggle" href="#">
+                <i class="fa fa-user"></i> <i class="fa fa-caret-down"></i>
+            </a>
+            <ul class="dropdown-menu">
+                <li>
+                    <a th:href="@{/admin/profile}">
+                        <i class="fa fa-user"></i> Thông tin cá nhân
+                    </a>
+                </li>
+                <li>
+                    <a th:href="@{/admin/change-password}">
+                        <i class="fa fa-key"></i> Đổi mật khẩu
+                    </a>
+                </li>
+                <li>
+                    <a th:href="@{/admin/logout}">
+                        <i class="fa fa-sign-out"></i> Đăng xuất
+                    </a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+
+</body>
+</html>

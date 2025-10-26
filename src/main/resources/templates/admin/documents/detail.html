@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${doc.title}">Chi tiết tài liệu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+            padding: 30px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .info p {
+            line-height: 1.6;
+        }
+        iframe, embed, img {
+            width: 100%;
+            height: 600px;
+            border: none;
+            margin-top: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+        .btn-back { background-color: #6c757d; color: white; }
+        .btn-download { background-color: #17a2b8; color: white; }
+        .preview-image {
+            display: block;
+            max-width: 100%;      /* không vượt quá chiều rộng container */
+            max-height: 500px;    /* giới hạn chiều cao */
+            height: auto;         /* giữ tỉ lệ ảnh */
+            width: auto;          /* không kéo giãn */
+            object-fit: contain;  /* đảm bảo ảnh không bị méo */
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            margin: 20px auto;    /* căn giữa */
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 th:text="${doc.title}">Chi tiết tài liệu</h1>
+
+    <div class="info">
+        <p><strong>Mô tả:</strong> <span th:text="${doc.description}">Không có mô tả</span></p>
+        <p><strong>Loại file:</strong> <span th:text="${doc.fileType != null ? doc.fileType.name : 'Không rõ'}"></span></p>
+        <p><strong>Dung lượng:</strong>
+            <span th:text="${#numbers.formatDecimal(doc.size / 1024.0 / 1024.0, 1, 2)} + ' MB'">0 MB</span>
+        </p>
+        <p><strong>Ngày tạo:</strong> <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy HH:mm')}"></span></p>
+        <p><strong>Trạng thái:</strong>
+            <span th:text="${doc.isVisible ? 'Công khai' : 'Riêng tư'}"></span>
+        </p>
+    </div>
+
+    <!-- Khu vực xem trước file -->
+    <div class="preview">
+        <h3>Xem trước tài liệu</h3>
+
+        <!-- Ảnh -->
+        <!-- Ảnh -->
+        <img th:if="${#strings.startsWith(doc.mimeType, 'image/')}"
+             th:src="@{'/uploads/' + ${doc.filename}}"
+             alt="Preview"
+             class="preview-image">
+
+
+        <!-- PDF -->
+        <iframe th:if="${#strings.equals(doc.mimeType, 'application/pdf')}"
+                th:src="@{'/uploads/' + ${doc.filename}}"></iframe>
+
+        <!-- Word, Excel, PowerPoint -->
+        <iframe th:if="${#strings.containsIgnoreCase(doc.mimeType, 'word')
+                        or #strings.containsIgnoreCase(doc.mimeType, 'excel')
+                        or #strings.containsIgnoreCase(doc.mimeType, 'presentation')}"
+                th:src="'https://docs.google.com/gview?url=' + ${#httpServletRequest.getScheme()} + '://' + ${#httpServletRequest.getServerName()} + ':' + ${#httpServletRequest.getServerPort()} + '/uploads/' + ${doc.filename} + '&embedded=true'">
+        </iframe>
+
+        <!-- Các loại khác -->
+        <p th:if="${!(#strings.startsWith(doc.mimeType, 'image/')
+                    or #strings.equals(doc.mimeType, 'application/pdf')
+                    or #strings.containsIgnoreCase(doc.mimeType, 'word')
+                    or #strings.containsIgnoreCase(doc.mimeType, 'excel')
+                    or #strings.containsIgnoreCase(doc.mimeType, 'presentation'))}">
+            Không thể xem trước loại file này.
+            <a th:href="@{'/uploads/' + ${doc.filename}}" target="_blank" class="btn btn-download">⬇ Tải về</a>
+        </p>
+    </div>
+
+    <div style="margin-top: 30px; text-align: center;">
+        <a th:href="@{/admin/documents/index}" class="btn btn-back">⬅ Quay lại danh sách</a>
+        <a th:href="@{'/uploads/' + ${doc.filename}}" target="_blank" class="btn btn-download">⬇ Tải file</a>
+    </div>
+</div>
+
+</body>
+</html>

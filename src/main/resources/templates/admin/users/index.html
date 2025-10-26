@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Danh sách người dùng</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <style>
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+        }
+
+        .main-content h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .alert {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background-color: #ffdddd;
+            color: #d8000c;
+            border-left: 4px solid red;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .table tbody tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #e1dddd;
+        }
+
+        .btn {
+            padding: 6px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-info:hover { background-color: #138496; }
+        .btn-danger:hover { background-color: #c82333; }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div th:insert="fragments/navbar :: navbar"></div>
+
+<div class="container">
+    <div class="layout">
+
+        <!-- Sidebar -->
+        <div th:insert="fragments/sidebar :: sidebar"></div>
+
+        <!-- Nội dung chính -->
+        <div class="main-content">
+            <h1>Danh sách người dùng</h1>
+
+            <!-- Hiển thị lỗi -->
+            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+            <!-- Hiển thị thành công -->
+            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th>Tên khách hàng</th>
+                    <th>Email</th>
+                    <th>Admin</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.name}"></td>
+                    <td th:text="${user.email}"></td>
+                    <td th:text="${user.admin ? 'Yes' : 'No'}"></td>
+                    <td>
+                        <a th:href="@{'/admin/users/edit/' + ${user.id}}"
+                           class="btn btn-sm btn-info">✏️ Sửa</a>
+
+                        <a th:href="@{'/admin/users/delete/' + ${user.id}}"
+                           class="btn btn-sm btn-danger delete"
+                           th:attr="data-username=${user.name}">
+                            🗑️ Xóa
+                        </a>
+
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="back-link" style="margin-top: 20px;">
+                <a th:href="@{/admin/dashboard}" class="btn btn-danger">Quay lại trang Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".delete").forEach(btn => {
+            btn.addEventListener("click", function(event) {
+                const name = this.getAttribute("data-username");
+                if (!confirm(`Bạn có chắc chắn muốn xóa người dùng ${name}?`)) {
+                    event.preventDefault();
+                }
+            });
+        });
+    });
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.1.0/js/bootstrap.min.js"></script>
+</body>
+</html>

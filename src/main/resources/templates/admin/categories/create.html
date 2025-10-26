@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm danh mục</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link th:href="@{/css/dashboard.css}" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+        }
+
+        #wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+        }
+
+        .main-content h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        form {
+            max-width: 600px;
+            margin-left: 0;
+            margin-top: 0;
+            background: #fff;
+            padding: 25px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 14px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-right: 8px;
+            text-decoration: none;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-info { background-color: #17a2b8; color: #fff; }
+        .btn-danger { background-color: #dc3545; color: #fff; }
+
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 720px) {
+            form { padding: 15px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Navbar -->
+<div th:insert="fragments/navbar :: navbar"></div>
+
+<!-- Layout -->
+<div id="wrapper">
+
+    <!-- Sidebar -->
+    <div th:insert="fragments/sidebar :: sidebar"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <h1>Thêm danh mục mới</h1>
+
+        <form th:action="@{/admin/categories/save}" th:object="${category}" method="post">
+
+            <!-- Tên danh mục -->
+            <label for="name">Tên danh mục:</label>
+            <input type="text" id="name" th:field="*{name}" placeholder="Nhập tên danh mục..." required>
+
+            <!-- Mô tả -->
+            <label for="description">Mô tả:</label>
+            <textarea id="description" th:field="*{description}" rows="4" placeholder="Nhập mô tả..."></textarea>
+
+            <!-- Nút thao tác -->
+            <div style="text-align: center;">
+                <button type="submit" class="btn btn-info">💾 Lưu danh mục</button>
+                <a th:href="@{/admin/categories/index}" class="btn btn-danger">⬅ Hủy / Quay lại</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

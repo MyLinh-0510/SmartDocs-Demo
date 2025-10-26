@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Tìm kiếm tài liệu</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header>
+    <h1>📚 Kho Tài Liệu</h1>
+
+    <form th:action="@{/search}" method="get">
+        <input type="text" name="q" placeholder="Nhập từ khóa..." th:value="${query}" required>
+        <button type="submit">Tìm kiếm</button>
+    </form>
+
+    <hr>
+</header>
+
+<main>
+
+    <!-- Nếu có kết quả tìm kiếm -->
+    <div th:if="${results != null and #lists.size(results) > 0}">
+        <h2>Kết quả tìm kiếm:</h2>
+        <ul>
+            <li th:each="r : ${results}">
+                📄 <strong th:text="${r.file}"></strong>
+                (<span th:text="${r.type}"></span>) -
+                <a th:href="${r.path}" target="_blank">Xem / Tải về</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Nếu không có kết quả -->
+    <div th:if="${results != null and #lists.size(results) == 0}">
+        <p>Không tìm thấy tài liệu nào phù hợp.</p>
+    </div>
+
+    <!-- Nếu chưa tìm kiếm (hiển thị toàn bộ danh sách tài liệu) -->
+    <div th:if="${results == null}">
+        <h3>📄 Danh sách tài liệu:</h3>
+        <ul>
+            <li th:each="doc : ${documents}">
+                <strong th:text="${doc.title}"></strong> -
+                <span th:text="${doc.category}"></span>
+                <a th:href="${doc.filePath}" target="_blank">Xem / Tải</a>
+            </li>
+        </ul>
+    </div>
+
+</main>
+</body>
+</html>

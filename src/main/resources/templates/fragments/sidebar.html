@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- fragment giống như "include" trong EJS -->
+<aside class="sidebar" th:fragment="sidebar">
+  <ul>
+    <li><a th:href="@{/admin/dashboard}">Dashboard</a></li>
+    <li><a th:href="@{/admin/users/index}">Quản lý người dùng</a></li>
+    <li><a th:href="@{/admin/categories/index}">Quản lý danh mục</a></li>
+    <li><a th:href="@{/admin/documents/index}">Quản lý tài liệu</a></li>
+    <li><a th:href="@{/admin/request}">Quản lý yêu cầu</a></li>
+    <li><a th:href="@{/admin/invoice}">Quản lý hóa đơn - chứng từ</a></li>
+    <li><a th:href="@{/admin/sale}">Pipeline Sale & Mua Hàng</a></li>
+    <li><a th:href="@{/admin/report}">Báo cáo & thống kê</a></li>
+  </ul>
+</aside>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Navbar</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <script th:src="@{https://cdn.jsdelivr.net/npm/chart.js}"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js}"></script>
+</head>
+<body>
+
+<!-- 🔹 Fragment: navbar -->
+<nav class="top-navbar" th:fragment="navbar">
+    <span class="navbar-title">📊 Admin</span>
+    <ul class="navbar-user">
+        <li class="dropdown">
+            <a class="dropdown-toggle" href="#">
+                <i class="fa fa-user"></i> <i class="fa fa-caret-down"></i>
+            </a>
+            <ul class="dropdown-menu">
+                <li><a th:href="@{/admin/account/profile}"><i class="fa fa-user"></i> Thông tin cá nhân</a></li>
+                <li><a th:href="@{/admin/account/change-password}"><i class="fa fa-key"></i> Đổi mật khẩu</a></li>
+                <li><a th:href="@{/admin/account/logout}"><i class="fa fa-sign-out"></i> Đăng xuất</a></li>
+            </ul>
+        </li>
+    </ul>
+</nav>
+
+</body>
+</html>

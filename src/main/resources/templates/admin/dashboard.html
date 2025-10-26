@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+
+  <!-- Local CSS -->
+  <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
+  <!-- Bootstrap (optional) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-ENjdO4Dr2bkBIFxQpeoYz1F1Q7846gkY3QZ6t27Z5n0I1z4zU9QmZ6t5Jk5t5t5t"
+        crossorigin="anonymous">
+</head>
+
+<body>
+<!-- Navbar -->
+<div th:insert="fragments/navbar :: navbar"></div>
+
+<div class="container">
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <div th:insert="fragments/sidebar :: sidebar"></div>
+
+    <!-- Nội dung chính -->
+    <main class="main-content">
+      <h1>📈 Thống kê tổng quan</h1>
+
+      <div class="stats">
+        <div class="card">🛒 Đơn hàng: <strong th:text="${stats.totalOrders}">0</strong></div>
+        <div class="card">💰 Doanh thu:
+          <strong th:text="${#numbers.formatDecimal(stats.totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' VND'">0</strong>
+        </div>
+        <div class="card">📁 Tài liệu: <strong th:text="${stats.totalDocuments}">0</strong></div>
+      </div>
+
+      <div class="charts">
+        <canvas id="usersChart"></canvas>
+        <canvas id="revenueChart"></canvas>
+        <canvas id="topProductsChart"></canvas>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Chart rendering -->
+<script th:inline="javascript">
+  /*<![CDATA[*/
+
+  // Nhúng dữ liệu Thymeleaf đúng cách
+  const chartData = /*[[${chartData}]]*/;
+  const bestSellingProducts = /*[[${bestSellingProducts}]]*/;
+
+
+  // Users Chart
+  new Chart(document.getElementById('usersChart'), {
+    type: 'line',
+    data: {
+      labels: chartData.labels,
+      datasets: [{
+        label: 'Người dùng mới',
+        data: chartData.newUsers,
+        borderColor: '#2ecc71',
+        fill: true,
+        backgroundColor: 'rgba(46,204,113,0.2)'
+      }]
+    }
+  });
+
+  // Revenue Chart
+  new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+      labels: chartData.labels,
+      datasets: [{
+        label: 'Doanh thu',
+        data: chartData.revenue,
+        backgroundColor: '#3498db'
+      }]
+    }
+  });
+
+  // Top Products Chart
+  new Chart(document.getElementById('topProductsChart'), {
+    type: 'pie',
+    data: {
+      labels: bestSellingProducts.map(p => p.name),
+      datasets: [{
+        data: bestSellingProducts.map(p => p.sales),
+        backgroundColor: ['#f1c40f', '#e67e22', '#1abc9c']
+      }]
+    }
+  });
+
+  /*]]>*/
+</script>
+</body>
+</html>
