@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Kho Tài Liệu</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #f9f9f9;
+        }
+        header h1 {
+            color: #333;
+        }
+        form {
+            margin-top: 10px;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 250px;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        hr {
+            margin: 20px 0;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 8px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 0 3px rgba(0,0,0,0.1);
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>📚 Kho Tài Liệu</h1>
+
+    <form action="#" method="get">
+        <input type="text" name="q" placeholder="Nhập từ khóa..." required>
+        <button type="submit">Tìm kiếm</button>
+    </form>
+
+    <hr>
+</header>
+
+<main>
+    <h3>📄 Danh sách tài liệu (mẫu):</h3>
+    <ul>
+        <li>📄 <strong>Hướng dẫn Spring Boot</strong> (PDF) – <a href="#">Xem / Tải về</a></li>
+        <li>📄 <strong>Giới thiệu Git & GitHub</strong> (DOCX) – <a href="#">Xem / Tải về</a></li>
+        <li>📄 <strong>Thiết kế CSDL cơ bản</strong> (PPTX) – <a href="#">Xem / Tải về</a></li>
+        <li>📄 <strong>Lập trình Java nâng cao</strong> (PDF) – <a href="#">Xem / Tải về</a></li>
+    </ul>
+</main>
+</body>
+</html>
