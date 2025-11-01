@@ -78,14 +78,13 @@
             background-color: #28a745;
             color: #fff;
         }
+        .btn-success:hover {
+            background-color: #138496;
+        }
 
         .btn-danger {
             background-color: #dc3545;
             color: #fff;
-        }
-
-        .back-link {
-            margin-top: 30px;
         }
 
         .error-messages {
@@ -95,6 +94,29 @@
             margin-bottom: 20px;
             border-radius: 5px;
             color: #a94442;
+        }
+
+        .form-actions {
+            text-align: center; /* ✅ Căn giữa 2 nút */
+            margin-top: 25px;
+        }
+
+        .form-actions .btn {
+            margin: 0 8px; /* khoảng cách giữa hai nút */
+        }
+
+        @media (max-width: 720px) {
+            .form-actions {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+                max-width: 250px;
+                margin: 6px 0;
+            }
         }
     </style>
 </head>
@@ -183,12 +205,16 @@
                 </label>
             </div>
 
-            <button type="submit" class="btn btn-success">💾 Tạo tài liệu</button>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">💾 Tạo tài liệu</button>
+                <a th:href="@{/admin/documents/index}" class="btn btn-danger">⬅ Quay lại danh sách</a>
+            </div>
+
         </form>
 
-        <div class="back-link">
-            <a th:href="@{/admin/documents/index}" class="btn btn-danger">⬅ Quay lại danh sách</a>
-        </div>
+
+
+
     </div>
 </div>
 

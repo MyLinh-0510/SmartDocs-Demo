@@ -33,7 +33,7 @@ public class User {
 
     // ✅ Enum for role
     public enum Role {
-        ADMIN, EMPLOYEE
+        ADMIN, CEO, EMPLOYEE
     }
 
     // ✅ Constructors

@@ -7,11 +7,8 @@ import edu.uni.smartdocs.repository.UserRepository;
 import edu.uni.smartdocs.service.CategoryService;
 import edu.uni.smartdocs.service.DocumentService;
 import edu.uni.smartdocs.service.FileTypeService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -19,14 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 @Controller
@@ -46,12 +36,15 @@ public class DocumentController {
 
     // ========================= DANH SÁCH =========================
     @GetMapping("/documents/index")
-    public String listDocuments(Model model, @AuthenticationPrincipal UserDetails principal) {
+    public String listDocuments(Model model,
+                                @AuthenticationPrincipal UserDetails principal) {
+
         if (principal == null) {
             model.addAttribute("documents", List.of());
             return "admin/documents/index";
         }
 
+        // Lấy user từ DB bằng email
         String email = principal.getUsername();
         User user = userRepository.findByEmail(email).orElse(null);
 
@@ -63,9 +56,11 @@ public class DocumentController {
         List<Document> allDocs = documentRepository.findAll();
         List<Document> visibleDocs;
 
+        // ADMIN / CEO => xem tất cả
         if (user.getRole() == User.Role.ADMIN || user.getRole() == User.Role.CEO) {
             visibleDocs = allDocs;
         } else {
+            // Nhân viên => chỉ xem tài liệu công khai
             visibleDocs = allDocs.stream()
                     .filter(doc -> doc.getIsVisible() != null && doc.getIsVisible())
                     .toList();
@@ -95,6 +90,7 @@ public class DocumentController {
                                  @AuthenticationPrincipal UserDetails principal,
                                  RedirectAttributes redirectAttributes) {
         try {
+            // Lấy người tạo
             User creator = userRepository.findByEmail(principal.getUsername()).orElse(null);
             documentService.saveDocument(title, description, fileTypeId, categoryId, meta, isVisible, file, creator);
             redirectAttributes.addFlashAttribute("success", "Tạo tài liệu thành công!");
@@ -108,22 +104,10 @@ public class DocumentController {
 
     // ========================= CHI TIẾT =========================
     @GetMapping("/documents/detail/{id}")
-    public String detail(@PathVariable Long id, Model model, HttpServletRequest request) {
+    public String detail(@PathVariable Long id, Model model) {
         Document doc = documentService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
         model.addAttribute("doc", doc);
-
-        // ✅ Base URL động
-        String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request)
-                .replacePath(null)
-                .build()
-                .toUriString();
-
-        // ✅ Encode filename (để tránh lỗi khi có dấu)
-        String encodedFileName = URLEncoder.encode(doc.getFilename(), StandardCharsets.UTF_8);
-
-        model.addAttribute("publicBaseUrl", baseUrl);
-        model.addAttribute("encodedFilename", encodedFileName);
         return "admin/documents/detail";
     }
 
@@ -137,25 +121,5 @@ public class DocumentController {
             redirectAttributes.addFlashAttribute("error", "Lỗi khi xoá tài liệu!");
         }
         return "redirect:/admin/documents/index";
-    }
-
-    // ========================= XEM FILE =========================
-    @GetMapping("/documents/view/{id}")
-    public String viewFile(@PathVariable Long id, Model model, HttpServletRequest request) {
-        // ✅ Trỏ về detail.html thay vì trả file
-        Document doc = documentService.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
-
-        String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request)
-                .replacePath(null)
-                .build()
-                .toUriString();
-
-        String encodedFileName = URLEncoder.encode(doc.getFilename(), StandardCharsets.UTF_8);
-
-        model.addAttribute("doc", doc);
-        model.addAttribute("publicBaseUrl", baseUrl);
-        model.addAttribute("encodedFilename", encodedFileName);
-        return "admin/documents/detail";
     }
 }

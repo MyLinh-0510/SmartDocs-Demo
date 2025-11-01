@@ -50,6 +50,9 @@
             padding: 12px;
             text-align: left;
         }
+        .add {
+            margin-bottom: 30px;
+        }
 
         th {
             background-color: #f2f2f2;
@@ -63,21 +66,23 @@
             background-color: #e1dddd;
         }
 
+        .back-link {
+            text-align: center; /* ✅ Căn giữa nút */
+            margin-top: 30px;
+        }
+
         .btn {
-            padding: 6px 10px;
+            padding: 6px 12px;
             border-radius: 4px;
+            font-size: 14px;
+            margin-right: 5px;
             text-decoration: none;
+            display: inline-block;
         }
 
-        .btn-info {
-            background-color: #17a2b8;
-            color: white;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
+        .btn-info {background-color: #17a2b8;color: white;}
+        .btn-danger { background-color: #dc3545;color: white;}
+        .btn-add { background-color: #fcba03; color: #fff; }
 
         .btn-info:hover { background-color: #138496; }
         .btn-danger:hover { background-color: #c82333; }
@@ -97,6 +102,12 @@
         <!-- Nội dung chính -->
         <div class="main-content">
             <h1>Danh sách người dùng</h1>
+
+            <!-- Thêm người dùng mới -->
+            <div class="add">
+                <a th:href="@{/admin/users/create}" class="btn btn-add">➕ Thêm người dùng</a>
+            </div>
+
 
             <!-- Hiển thị lỗi -->
             <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
@@ -133,9 +144,10 @@
                 </tbody>
             </table>
 
-            <div class="back-link" style="margin-top: 20px;">
-                <a th:href="@{/admin/dashboard}" class="btn btn-danger">Quay lại trang Dashboard</a>
+            <div class="back-link">
+                <a th:href="@{/admin/dashboard}" class="btn btn-danger">⬅ Quay lại trang Dashboard</a>
             </div>
+
         </div>
     </div>
 </div>

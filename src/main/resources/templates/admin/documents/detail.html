@@ -5,12 +5,17 @@
     <title th:text="${doc.title}">Chi tiết tài liệu</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Thư viện đọc Word + Excel -->
+    <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f6f8;
             padding: 30px;
         }
+
         .container {
             max-width: 900px;
             margin: auto;
@@ -19,40 +24,45 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             padding: 30px;
         }
-        h1 {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        .info p {
-            line-height: 1.6;
-        }
-        iframe, embed, img {
+
+        h1 { text-align: center; margin-bottom: 25px; }
+
+        iframe, img {
             width: 100%;
             height: 600px;
             border: none;
             margin-top: 20px;
         }
+
         .btn {
             display: inline-block;
             padding: 8px 16px;
             border-radius: 5px;
             text-decoration: none;
-            margin-right: 10px;
-        }
-        .btn-back { background-color: #6c757d; color: white; }
-        .btn-download { background-color: #17a2b8; color: white; }
-        .preview-image {
-            display: block;
-            max-width: 100%;      /* không vượt quá chiều rộng container */
-            max-height: 500px;    /* giới hạn chiều cao */
-            height: auto;         /* giữ tỉ lệ ảnh */
-            width: auto;          /* không kéo giãn */
-            object-fit: contain;  /* đảm bảo ảnh không bị méo */
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            margin: 20px auto;    /* căn giữa */
+            margin: 10px;
         }
 
+        .btn-back { background-color: #6c757d; color: white; }
+        .btn-download { background-color: #17a2b8; color: white; }
+
+        #previewArea {
+            display: none;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #fafafa;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        #previewError {
+            display: none;
+            color: red;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -64,7 +74,7 @@
         <p><strong>Mô tả:</strong> <span th:text="${doc.description}">Không có mô tả</span></p>
         <p><strong>Loại file:</strong> <span th:text="${doc.fileType != null ? doc.fileType.name : 'Không rõ'}"></span></p>
         <p><strong>Dung lượng:</strong>
-            <span th:text="${#numbers.formatDecimal(doc.size / 1024.0 / 1024.0, 1, 2)} + ' MB'">0 MB</span>
+            <span th:text="|${#numbers.formatDecimal(doc.size / 1024.0 / 1024.0, 1, 2)} MB|"></span>
         </p>
         <p><strong>Ngày tạo:</strong> <span th:text="${#temporals.format(doc.createdAt, 'dd/MM/yyyy HH:mm')}"></span></p>
         <p><strong>Trạng thái:</strong>
@@ -72,42 +82,88 @@
         </p>
     </div>
 
-    <!-- Khu vực xem trước file -->
     <div class="preview">
         <h3>Xem trước tài liệu</h3>
 
-        <!-- Ảnh -->
-        <!-- Ảnh -->
+        <!-- 🖼 Hình ảnh -->
         <img th:if="${#strings.startsWith(doc.mimeType, 'image/')}"
              th:src="@{'/uploads/' + ${doc.filename}}"
-             alt="Preview"
-             class="preview-image">
+             alt="Preview"/>
 
-
-        <!-- PDF -->
+        <!-- 📄 PDF -->
         <iframe th:if="${#strings.equals(doc.mimeType, 'application/pdf')}"
                 th:src="@{'/uploads/' + ${doc.filename}}"></iframe>
 
-        <!-- Word, Excel, PowerPoint -->
-        <iframe th:if="${#strings.containsIgnoreCase(doc.mimeType, 'word')
-                        or #strings.containsIgnoreCase(doc.mimeType, 'excel')
-                        or #strings.containsIgnoreCase(doc.mimeType, 'presentation')}"
-                th:src="'https://docs.google.com/gview?url=' + ${#httpServletRequest.getScheme()} + '://' + ${#httpServletRequest.getServerName()} + ':' + ${#httpServletRequest.getServerPort()} + '/uploads/' + ${doc.filename} + '&embedded=true'">
-        </iframe>
+        <!-- 🧩 Word & Excel -->
+        <div th:if="${#strings.containsIgnoreCase(doc.mimeType, 'word')
+                     or #strings.containsIgnoreCase(doc.mimeType, 'excel')}">
 
-        <!-- Các loại khác -->
-        <p th:if="${!(#strings.startsWith(doc.mimeType, 'image/')
-                    or #strings.equals(doc.mimeType, 'application/pdf')
-                    or #strings.containsIgnoreCase(doc.mimeType, 'word')
-                    or #strings.containsIgnoreCase(doc.mimeType, 'excel')
-                    or #strings.containsIgnoreCase(doc.mimeType, 'presentation'))}">
-            Không thể xem trước loại file này.
-            <a th:href="@{'/uploads/' + ${doc.filename}}" target="_blank" class="btn btn-download">⬇ Tải về</a>
-        </p>
+            <div id="loadingMsg">⏳ Đang tải bản xem trước...</div>
+            <div id="previewArea"></div>
+            <div id="previewError">❌ Không thể xem trước. Vui lòng tải về.</div>
+
+            <script th:inline="javascript">
+                const baseUrl = /*[[${publicBaseUrl}]]*/ '';
+                const filename = /*[[${encodedFilename}]]*/ '';
+                const fileUrl = baseUrl + '/uploads/' + filename;
+                const mimeType = /*[[${doc.mimeType}]]*/ '';
+
+                const previewArea = document.getElementById("previewArea");
+                const errorDiv = document.getElementById("previewError");
+                const loadingMsg = document.getElementById("loadingMsg");
+
+                fetch(fileUrl)
+                    .then(resp => {
+                        if (!resp.ok) throw new Error("Không tải được file");
+                        return resp.arrayBuffer();
+                    })
+                    .then(buffer => {
+                        loadingMsg.style.display = "none";
+
+                        if (mimeType.includes("word")) {
+                            mammoth.convertToHtml({ arrayBuffer: buffer })
+                                .then(res => {
+                                    previewArea.innerHTML = res.value;
+                                    previewArea.style.display = "block";
+                                })
+                                .catch(() => errorDiv.style.display = "block");
+                        } else if (mimeType.includes("excel")) {
+                            const workbook = XLSX.read(buffer, { type: "array" });
+                            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                            previewArea.innerHTML = XLSX.utils.sheet_to_html(sheet);
+                            previewArea.style.display = "block";
+                        } else {
+                            errorDiv.style.display = "block";
+                        }
+                    })
+                    .catch(() => {
+                        loadingMsg.style.display = "none";
+                        errorDiv.style.display = "block";
+                    });
+            </script>
+
+            <!-- 🔗 Fallback: Office Viewer nếu không render được -->
+            <iframe id="officeFrame" style="display:none; width:100%; height:600px; border:none;"
+                    frameborder="0"></iframe>
+
+            <script>
+                // Nếu previewError hiển thị, fallback sang Office viewer
+                const observer = new MutationObserver(() => {
+                    if (errorDiv.style.display === "block") {
+                        const viewerUrl = "https://view.officeapps.live.com/op/embed.aspx?src=" + encodeURIComponent(fileUrl);
+                        const officeFrame = document.getElementById("officeFrame");
+                        officeFrame.src = viewerUrl;
+                        officeFrame.style.display = "block";
+                        observer.disconnect();
+                    }
+                });
+                observer.observe(errorDiv, { attributes: true, attributeFilter: ['style'] });
+            </script>
+        </div>
     </div>
 
     <div style="margin-top: 30px; text-align: center;">
-        <a th:href="@{/admin/documents/index}" class="btn btn-back">⬅ Quay lại danh sách</a>
+        <a th:href="@{/admin/documents/index}" class="btn btn-back">⬅ Quay lại</a>
         <a th:href="@{'/uploads/' + ${doc.filename}}" target="_blank" class="btn btn-download">⬇ Tải file</a>
     </div>
 </div>

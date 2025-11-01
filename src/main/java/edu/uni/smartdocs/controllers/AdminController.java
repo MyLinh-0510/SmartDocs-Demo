@@ -10,6 +10,7 @@ import edu.uni.smartdocs.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +26,8 @@ import java.util.Optional;
 public class AdminController {
 
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+
 
     // ---------- DASHBOARD ----------
     @GetMapping("/dashboard")
@@ -75,6 +78,63 @@ public class AdminController {
         injectUser(model);
         return "admin/users/index";
     }
+
+    // ---------- CREATE USER ----------
+    @GetMapping("/users/create")
+    public String showCreateUserForm(Model model) {
+        if (!hasAdminRole()) {
+            model.addAttribute("error", "Bạn không có quyền truy cập.");
+            return "admin/account/login";
+        }
+
+        model.addAttribute("newUser", new User());
+        injectUser(model);
+        return "admin/users/create";
+    }
+
+    @PostMapping("/users/create")
+    public String createUser(@RequestParam String name,
+                             @RequestParam String email,
+                             @RequestParam String password,
+                             @RequestParam(required = false) String isAdmin,
+                             RedirectAttributes redirectAttributes) {
+        if (!hasAdminRole()) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền truy cập.");
+            return "redirect:/admin/account/login";
+        }
+
+        if (name == null || name.isBlank()) {
+            redirectAttributes.addFlashAttribute("error", "Tên không được để trống");
+            return "redirect:/admin/users/create";
+        }
+
+        if (!isValidEmail(email)) {
+            redirectAttributes.addFlashAttribute("error", "Email không hợp lệ");
+            return "redirect:/admin/users/create";
+        }
+
+        if (password == null || password.isBlank()) {
+            redirectAttributes.addFlashAttribute("error", "Mật khẩu không được để trống");
+            return "redirect:/admin/users/create";
+        }
+
+        if (userService.existsByEmail(email)) {
+            redirectAttributes.addFlashAttribute("error", "Email đã tồn tại");
+            return "redirect:/admin/users/create";
+        }
+
+        User newUser = new User();
+        newUser.setName(name);
+        newUser.setEmail(email.toLowerCase());
+        newUser.setPassword(passwordEncoder.encode(password));
+        newUser.setAdmin(isAdmin != null && (isAdmin.equals("on") || isAdmin.equals("true")));
+
+        userService.save(newUser);
+
+        redirectAttributes.addFlashAttribute("success", "Tạo tài khoản thành công!");
+        return "redirect:/admin/users/index";
+    }
+
 
     // ---------- SHOW EDIT FORM ----------
     @GetMapping("/users/edit/{id}")

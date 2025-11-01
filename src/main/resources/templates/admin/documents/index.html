@@ -63,6 +63,7 @@
       display: inline-block;
     }
 
+    .btn-add { background-color: #fcba03; color: #fff; }
     .btn-info { background-color: #17a2b8; color: #fff; }
     .btn-danger { background-color: #dc3545; color: #fff; }
     .btn-detail { background-color: #eaa95b; color: #fff; }
@@ -91,7 +92,7 @@
 
     <!-- Nút thêm mới -->
     <div class="add">
-      <a th:href="@{/admin/documents/create}" class="btn btn-info">➕ Thêm mới</a>
+      <a th:href="@{/admin/documents/create}" class="btn btn-add">➕ Thêm tài liệu mới</a>
     </div>
 
     <!-- Bảng danh sách -->
@@ -123,8 +124,9 @@
         <!-- Hành động -->
         <td>
           <!-- 🔍 Nút xem chi tiết -->
-          <a th:href="@{'/admin/documents/detail/' + ${doc.id}}"
-             class="btn btn-detail">🔍 Xem</a>
+          <a th:href="@{'/admin/documents/view/' + ${doc.id}}"
+             class="btn btn-info" target="_blank">👁️ Xem file</a>
+
 
           <!-- ✏️ Nút sửa -->
           <a th:href="@{'/admin/documents/edit/' + ${doc.id}}"

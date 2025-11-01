@@ -15,4 +15,5 @@ public interface UserService {
     void initiatePasswordReset(String email);
     User validateResetToken(String token);
     void resetPassword(String token, String newPassword);
+    boolean existsByEmail(String email);
 }

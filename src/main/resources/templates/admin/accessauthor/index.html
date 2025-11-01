@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Phân quyền truy cập tài liệu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link th:href="@{/css/dashboard.css}" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8;
+        }
+
+        #wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+        }
+
+        .main-content h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .filter-bar label {
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .filter-bar select {
+            padding: 6px 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        .btn-filter {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 7px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: -25px;
+        }
+
+        .btn-filter:hover {
+            background-color: #0056b3;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+        }
+
+        .table th, .table td {
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #f1f1f1;
+        }
+
+        .table tbody tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-right: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-save {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .role-checkbox {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .role-checkbox label {
+            font-weight: normal;
+        }
+
+        .back-btn-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        form {
+            margin: 0;
+        }
+    </style>
+
+</head>
+<body>
+
+<!-- Navbar -->
+<div th:insert="fragments/navbar :: navbar"></div>
+
+<div id="wrapper">
+
+    <!-- Sidebar -->
+    <div th:insert="fragments/sidebar :: sidebar"></div>
+
+    <div class="main-content">
+        <h1>Phân quyền truy cập tài liệu</h1>
+
+        <!-- Bộ lọc -->
+        <form th:action="@{/admin/accessauthor}" method="get" class="filter-bar">
+            <div>
+                <label for="fileType">Loại file:</label>
+                <select name="fileTypeId" id="fileType">
+                    <option value="">-- Tất cả --</option>
+                    <option th:each="ft : ${fileTypes}"
+                            th:value="${ft.id}"
+                            th:text="${ft.name}"
+                            th:selected="${ft.id == selectedFileTypeId}">
+                    </option>
+                </select>
+            </div>
+
+            <div>
+                <label for="category">Danh mục:</label>
+                <select name="categoryId" id="category">
+                    <option value="">-- Tất cả --</option>
+                    <option th:each="cat : ${categories}"
+                            th:value="${cat.id}"
+                            th:text="${cat.name}"
+                            th:selected="${cat.id == selectedCategoryId}">
+                    </option>
+                </select>
+            </div>
+
+            <div>
+                <label for="role">Vai trò:</label>
+                <select name="role" id="role">
+                    <option value="">-- Tất cả --</option>
+                    <option th:each="r : ${roles}"
+                            th:value="${r}"
+                            th:text="${r}"
+                            th:selected="${r == selectedRole}">
+                    </option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-filter">
+                <i class="fa fa-filter"></i> Lọc
+            </button>
+        </form>
+
+        <!-- Bảng dữ liệu -->
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Tiêu đề</th>
+                <th>Loại file</th>
+                <th>Vai trò được phép xem</th>
+                <th>Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="doc : ${documents}">
+                <td th:text="${doc.title}">Tài liệu</td>
+                <td th:text="${doc.fileType == null ? 'Không rõ' : doc.fileType.name}">Loại</td>
+
+                <!-- ✅ Hiển thị danh sách vai trò được phép xem -->
+                <td>
+                    <ul>
+                        <li th:each="r : ${doc.visibleToRoles}" th:text="${r}">EMPLOYEE</li>
+                    </ul>
+                </td>
+
+                <!-- ✅ Form cập nhật nhiều vai trò -->
+                <td>
+                    <form th:action="@{/admin/accessauthor/update}" method="post" class="role-checkbox">
+                        <input type="hidden" name="docId" th:value="${doc.id}"/>
+
+                        <div th:each="r : ${roles}">
+                            <label>
+                                <input type="checkbox" name="roles"
+                                       th:value="${r}"
+                                       th:checked="${doc.visibleToRoles.contains(r)}"/>
+                                <span th:text="${r}"></span>
+                            </label>
+                        </div>
+
+                        <div th:if="${_csrf != null}">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        </div>
+
+                        <button type="submit" class="btn btn-save">💾 Lưu</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div class="back-btn-container">
+            <a th:href="@{/admin/dashboard}" class="btn btn-danger">⬅ Quay lại Dashboard</a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

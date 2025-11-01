@@ -3,6 +3,7 @@ package edu.uni.smartdocs.service;
 import edu.uni.smartdocs.models.Category;
 import edu.uni.smartdocs.models.Document;
 import edu.uni.smartdocs.models.FileType;
+import edu.uni.smartdocs.models.User;
 import edu.uni.smartdocs.repository.CategoryRepository;
 import edu.uni.smartdocs.repository.DocumentRepository;
 import edu.uni.smartdocs.repository.FileTypeRepository;
@@ -70,14 +71,15 @@ public class DocumentService {
         return documentRepository.findByFileType_Id(fileTypeId);
     }
 
-    // ===== Xử lý lưu tài liệu mới =====
+    // ===== Xử lý lưu tài liệu mới (có người tạo) =====
     public void saveDocument(String title,
                              String description,
                              Long fileTypeId,
                              Long categoryId,
                              String meta,
                              boolean isVisible,
-                             MultipartFile file) {
+                             MultipartFile file,
+                             User creator) {
 
         try {
             // ✅ Tự sinh meta nếu rỗng
@@ -125,6 +127,15 @@ public class DocumentService {
             doc.setSize(file.getSize());
             doc.setFilePath(filePath.toString());
 
+            // ✅ Gán quyền xem dựa theo vai trò của người tạo
+            if (creator != null && creator.getRole() != null) {
+                doc.getVisibleToRoles().add(creator.getRole());
+            } else {
+                doc.getVisibleToRoles().add(User.Role.EMPLOYEE);
+            }
+
+
+            // ✅ Lưu tài liệu
             documentRepository.save(doc);
 
         } catch (IOException e) {
