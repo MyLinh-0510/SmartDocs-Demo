@@ -16,4 +16,11 @@ public interface UserService {
     User validateResetToken(String token);
     void resetPassword(String token, String newPassword);
     boolean existsByEmail(String email);
+    boolean passwordMatches(String rawPassword, String encodedPassword);
+    String encodePassword(String rawPassword);
+
+    Object countUsers();
+
+    List<Integer> getMonthlyUserCounts();
+
 }

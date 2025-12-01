@@ -14,6 +14,9 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     List<Document> findAll();
     Optional<Document> findById(Long id);
     boolean existsByMeta(String meta);
+    List<Document> findByTitleContainingIgnoreCaseAndIsVisibleTrue(String keyword);
+    List<Document> findTop20ByIsVisibleTrueOrderByCreatedAtDesc();
+
 
 
 }

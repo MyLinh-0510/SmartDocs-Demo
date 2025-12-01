@@ -2,8 +2,10 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Login</title>
+    <title>Đăng nhập</title>
+
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -13,15 +15,39 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            padding: 20px;
         }
 
-        .login-container {
+        /* Khung tổng 2 phần: ảnh + form */
+        .container {
             background: white;
-            padding: 30px 40px;
+            display: flex;
+            width: 900px;
+            max-width: 100%;
             border-radius: 12px;
+            overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Ảnh bên trái */
+        .image-box {
+            width: 45%;
+            background-color: #e8f5e9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-box img {
             width: 100%;
-            max-width: 400px;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Form bên phải */
+        .login-container {
+            width: 55%;
+            padding: 35px 40px;
         }
 
         h1 {
@@ -102,28 +128,18 @@
         }
 
         .alert {
-            background-color: #ffdddd;
-            color: #d8000c;
-            padding: 12px;
-            border-left: 4px solid red;
-            margin-bottom: 20px;
-            border-radius: 6px;
-        }
-        .alert {
             padding: 12px;
             margin-bottom: 20px;
             border-radius: 6px;
             font-weight: 500;
         }
 
-        /* ❌ Lỗi (đỏ) */
         .alert-error {
             background-color: #ffdddd;
             color: #d8000c;
             border-left: 4px solid red;
         }
 
-        /* ✅ Thành công (xanh) */
         .alert-success {
             background-color: #d4edda;
             color: #155724;
@@ -132,7 +148,7 @@
 
         .form-footer {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 12px;
         }
 
         .form-footer a {
@@ -143,64 +159,83 @@
         .form-footer a:hover {
             text-decoration: underline;
         }
+
+        /* Responsive - Ẩn ảnh khi màn nhỏ */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .image-box {
+                display: none;
+            }
+            .login-container {
+                width: 100%;
+            }
+        }
     </style>
 </head>
+
 <body>
-<div class="login-container">
-    <h1>Admin Login</h1>
 
-    <!-- Hiển thị lỗi -->
-    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+<div class="container">
 
-    <!-- Hiển thị thành công -->
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-
-    <div th:if="${param.changed}">
-        <div class="alert alert-success">
-            Đổi mật khẩu thành công! Vui lòng đăng nhập lại.
-        </div>
+    <!-- Ảnh bên trái -->
+    <div class="image-box">
+        <img src="/images/login.jpg" alt="Login Image">
     </div>
 
+    <!-- FORM LOGIN -->
+    <div class="login-container">
+        <h1>Đăng nhập</h1>
 
-    <form th:action="@{/admin/account/login}" method="post">
-        <div class="form-group">
-            <label for="username">Email:</label>
-            <div class="input-wrapper">
-                <input type="text" id="username" name="username" required>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <div th:if="${param.changed}">
+            <div class="alert alert-success">
+                Đổi mật khẩu thành công! Vui lòng đăng nhập lại.
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="password">Password:</label>
-            <div class="input-wrapper">
-                <input type="password" id="password" name="password" required>
-                <span class="toggle-password" id="togglePassword">👁️</span>
+        <form th:action="@{/admin/account/login}" method="post">
+
+            <div class="form-group">
+                <label for="username">Email:</label>
+                <div class="input-wrapper">
+                    <input type="text" id="username" name="username" required>
+                </div>
             </div>
-        </div>
 
-        <div class="remember-group">
-            <input type="checkbox" id="remember" name="remember">
-            <label for="remember">Remember me</label>
-        </div>
+            <div class="form-group">
+                <label for="password">Mật khẩu:</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password" name="password" required>
+                    <span class="toggle-password" id="togglePassword">👁️</span>
+                </div>
+            </div>
 
-        <button type="submit">Login</button>
+            <div class="remember-group">
+                <input type="checkbox" id="remember" name="remember">
+                <label for="remember">Lưu mật khẩu</label>
+            </div>
 
-        <div class="form-footer">
-            <span>Quên mật khẩu? </span>
-            <a th:href="@{/admin/account/forgot-password}">Đặt lại mật khẩu tại đây</a>
-        </div>
+            <button type="submit">Đăng nhập</button>
 
-        <div class="form-footer">
-            <span>Chưa có tài khoản? </span>
-            <a th:href="@{/admin/account/register}">Đăng ký tại đây</a>
-        </div>
+            <div class="form-footer">
+                Quên mật khẩu? <a th:href="@{/admin/account/forgot-password}">Đặt lại mật khẩu</a>
+            </div>
 
-    </form>
+            <div class="form-footer">
+                Chưa có tài khoản? <a th:href="@{/admin/account/register}">Đăng ký</a>
+            </div>
+        </form>
+    </div>
+
 </div>
 
 <script>
-    const togglePasswordIcon = document.getElementById('togglePassword');
-    togglePasswordIcon.addEventListener('click', function () {
+    document.getElementById('togglePassword').addEventListener('click', function () {
         const input = document.getElementById('password');
         if (input.type === 'password') {
             input.type = 'text';
@@ -211,5 +246,6 @@
         }
     });
 </script>
+
 </body>
 </html>

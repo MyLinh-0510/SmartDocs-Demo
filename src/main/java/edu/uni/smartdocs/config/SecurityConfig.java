@@ -7,28 +7,39 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final AuthenticationSuccessHandler successHandler;
+
+    public SecurityConfig(AuthenticationSuccessHandler successHandler) {
+        this.successHandler = successHandler;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index", "/css/**", "/js/**").permitAll()
-                        .requestMatchers("/admin/account/**").permitAll() // ✅ Cho phép truy cập login/register
+                        .requestMatchers("/account/**", "/admin/account/**").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/site/**").hasAnyRole("EMPLOYEE", "CEO")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
-                        .loginPage("/admin/account/login")       // ✅ Trang login thật
-                        .defaultSuccessUrl("/admin/dashboard", true)
+                        .loginPage("/admin/account/login")
+                        .loginProcessingUrl("/admin/account/login")
+                        .successHandler(successHandler) // ✅ handler đã chỉ định hướng đi
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        .logoutUrl("/logout")
+                        .logoutUrl("/admin/account/logout")
                         .logoutSuccessUrl("/admin/account/login?logout=true")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
                         .permitAll()
                 )
                 .csrf(csrf -> csrf.disable());
@@ -40,6 +51,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-
 }

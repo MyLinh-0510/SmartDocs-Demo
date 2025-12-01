@@ -4,27 +4,71 @@
     <meta charset="UTF-8">
     <title>Navbar</title>
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <script th:src="@{https://cdn.jsdelivr.net/npm/chart.js}"></script>
-    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js}"></script>
 </head>
 <body>
 
 <!-- 🔹 Fragment: navbar -->
 <nav class="top-navbar" th:fragment="navbar">
     <span class="navbar-title">📊 Admin</span>
+
     <ul class="navbar-user">
         <li class="dropdown">
+
+            <!-- CHỈ 1 ICON USER + 1 ICON CARET -->
             <a class="dropdown-toggle" href="#">
-                <i class="fa fa-user"></i> <i class="fa fa-caret-down"></i>
+                <i class="fa-solid fa-user"></i>
             </a>
+
             <ul class="dropdown-menu">
-                <li><a th:href="@{/admin/account/profile}"><i class="fa fa-user"></i> Thông tin cá nhân</a></li>
-                <li><a th:href="@{/admin/account/change-password}"><i class="fa fa-key"></i> Đổi mật khẩu</a></li>
-                <li><a th:href="@{/admin/account/logout}"><i class="fa fa-sign-out"></i> Đăng xuất</a></li>
+                <li><a th:href="@{/admin/account/profile}">
+                    <i class="fa-solid fa-user"></i> Thông tin cá nhân
+                </a></li>
+
+                <li><a th:href="@{/admin/account/profile-edit}">
+                    <i class="fa-solid fa-key"></i> Chỉnh sửa thông tin
+                </a></li>
+
+                <!-- Đăng xuất -->
+                <li>
+                    <form th:action="@{/admin/account/logout}" method="post" style="display:inline;">
+                        <button type="submit" class="logout-button">
+                            <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+                        </button>
+                    </form>
+                </li>
             </ul>
+
         </li>
     </ul>
 </nav>
+
+<style>
+    .dropdown-menu {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .dropdown-menu li {
+        margin: 5px 0;
+    }
+
+    .logout-button {
+        background: none !important;
+        border: none !important;
+        color: #333;
+        cursor: pointer;
+        padding: 0;
+        width: 100%;
+        text-align: left;
+        font: inherit;
+        box-shadow: none !important;
+    }
+
+    .logout-button:hover {
+        color: #e74c3c;
+    }
+</style>
 
 </body>
 </html>

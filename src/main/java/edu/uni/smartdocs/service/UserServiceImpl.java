@@ -10,6 +10,9 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.Collections;
+
 
 @Service
 @RequiredArgsConstructor
@@ -23,11 +26,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> findAll() {
+
         return userRepository.findAll();
     }
 
     @Override
     public long countAdmins() {
+
         return userRepository.countByIsAdminTrue();
     }
 
@@ -38,6 +43,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void save(User user) {
+
         userRepository.save(user);
     }
 
@@ -48,11 +54,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> findByEmail(String email) {
+
         return userRepository.findByEmail(email);
     }
 
     @Override
     public void deleteById(Long id) {
+
         userRepository.deleteById(id);
     }
 
@@ -108,4 +116,37 @@ public class UserServiceImpl implements UserService {
         }
         return sb.toString();
     }
+
+    @Override
+    public boolean passwordMatches(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    @Override
+    public String encodePassword(String rawPassword) {
+        return passwordEncoder.encode(rawPassword);
+    }
+
+    @Override
+    public Object countUsers() {
+        return userRepository.count();
+    }
+
+    @Override
+    public List<Integer> getMonthlyUserCounts() {
+        int year = java.time.Year.now().getValue();
+        List<Object[]> raw = userRepository.countUsersByMonth(year);
+
+        List<Integer> result = new ArrayList<>(Collections.nCopies(12, 0));
+
+        for (Object[] row : raw) {
+            int month = ((Integer) row[0]) - 1;
+            long count = (long) row[1];
+            result.set(month, (int) count);
+        }
+
+        return result;
+    }
+
+
 }

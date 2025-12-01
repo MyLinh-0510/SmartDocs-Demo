@@ -1,23 +1,33 @@
 package edu.uni.smartdocs.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import edu.uni.smartdocs.models.Category;
+import edu.uni.smartdocs.models.ContactMessage;
 import edu.uni.smartdocs.models.Document;
 import edu.uni.smartdocs.models.User;
-import edu.uni.smartdocs.service.CategoryService;
-import edu.uni.smartdocs.service.DocumentService;
-import edu.uni.smartdocs.service.FileTypeService;
-import edu.uni.smartdocs.service.UserService;
+import edu.uni.smartdocs.repository.ContactMessageRepository;
+import edu.uni.smartdocs.service.*;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 
 import java.io.IOException;
+import java.security.Principal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -27,57 +37,73 @@ public class AdminController {
 
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final DocumentService documentService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private ContactService contactService;
 
     // ---------- DASHBOARD ----------
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
-        if (!hasAdminRole()) {
-            model.addAttribute("error", "Bạn không có quyền truy cập.");
-            return "admin/account/login";
-        }
+    public String dashboard(Model model) throws JsonProcessingException {
 
-        model.addAttribute("stats", java.util.Map.of(
-                "totalUsers", userService.findAll().size(),
-                "totalOrders", 150,
-                "totalRevenue", 120_000_000,
-                "totalDocuments", 45
+        // Danh sách nhãn cho biểu đồ
+        List<String> labels = List.of(
+                "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+                "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
+        );
+
+        // ----- Thống kê tổng quan -----
+        model.addAttribute("stats", Map.of(
+                "totalUsers", userService.countUsers(),
+                "totalOrders", 287L,
+                "totalDocuments", documentService.count(),
+                "totalCategories", categoryService.findAll().size(),
+                "totalFeedbacks", contactService.count()
         ));
 
-        model.addAttribute("bestSellingProducts", java.util.List.of(
-                java.util.Map.of("name", "Áo thun", "sales", 80),
-                java.util.Map.of("name", "Giày thể thao", "sales", 65),
-                java.util.Map.of("name", "Ba lô", "sales", 30)
-        ));
+        // ----- Biểu đồ Users theo tháng -----
+        model.addAttribute("chartDataJson",
+                objectMapper.writeValueAsString(
+                        Map.of(
+                                "labels", labels,
+                                "newUsers", userService.getMonthlyUserCounts()
+                        )
+                )
+        );
 
-        model.addAttribute("chartData", java.util.Map.of(
-                "labels", java.util.List.of("T1", "T2", "T3", "T4"),
-                "newUsers", java.util.List.of(10, 20, 30, 40),
-                "revenue", java.util.List.of(10_000_000, 25_000_000, 30_000_000, 40_000_000)
-        ));
+        // ----- Tài liệu được tải nhiều nhất -----
+        model.addAttribute("bestSellingProductsJson",
+                objectMapper.writeValueAsString(
+                        List.of(
+                                Map.of("name", "Hợp đồng lao động", "sales", 189),
+                                Map.of("name", "Quy chế công ty", "sales", 142),
+                                Map.of("name", "Nội quy an toàn", "sales", 98),
+                                Map.of("name", "Hướng dẫn sử dụng", "sales", 76),
+                                Map.of("name", "Báo cáo tài chính", "sales", 65)
+                        )
+                )
+        );
 
         injectUser(model);
         return "admin/dashboard";
     }
 
+
     // ---------- USERS LIST ----------
-    @GetMapping("users/index")
-    public String listUsers(Model model,
-                            @RequestParam(value = "success", required = false) Boolean success,
-                            @RequestParam(value = "action", required = false) String action,
-                            @RequestParam(value = "error", required = false) String error) {
+    @GetMapping("/users/index")
+    public String listUsers(Model model) {
         if (!hasAdminRole()) {
             model.addAttribute("error", "Bạn không có quyền truy cập.");
             return "admin/account/login";
         }
 
         model.addAttribute("users", userService.findAll());
-        model.addAttribute("success", success != null && success);
-        model.addAttribute("action", action);
-        model.addAttribute("error", error);
         injectUser(model);
         return "admin/users/index";
     }
+
 
     // ---------- CREATE USER ----------
     @GetMapping("/users/create")
@@ -96,45 +122,71 @@ public class AdminController {
     public String createUser(@RequestParam String name,
                              @RequestParam String email,
                              @RequestParam String password,
+                             @RequestParam String confirmPassword,
                              @RequestParam(required = false) String isAdmin,
-                             RedirectAttributes redirectAttributes) {
+                             Model model) {
+
+        // Kiểm tra role admin
         if (!hasAdminRole()) {
-            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền truy cập.");
-            return "redirect:/admin/account/login";
+            model.addAttribute("error", "Bạn không có quyền truy cập.");
+            return "admin/account/login";
         }
 
+        // Validate dữ liệu
         if (name == null || name.isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Tên không được để trống");
-            return "redirect:/admin/users/create";
+            model.addAttribute("error", "Tên không được để trống");
+            model.addAttribute("newUser", new User());
+            return "admin/users/create";
+        }
+        if (email == null || !email.matches("^[\\w-.]+@gmail\\.com$")) {
+            model.addAttribute("error", "Email phải là địa chỉ Gmail hợp lệ (vd: ten@gmail.com)");
+            model.addAttribute("newUser", new User());
+            return "admin/users/create";
         }
 
-        if (!isValidEmail(email)) {
-            redirectAttributes.addFlashAttribute("error", "Email không hợp lệ");
-            return "redirect:/admin/users/create";
-        }
-
+        // Mật khẩu không được trống
         if (password == null || password.isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Mật khẩu không được để trống");
-            return "redirect:/admin/users/create";
+            model.addAttribute("error", "Mật khẩu không được để trống");
+            model.addAttribute("newUser", new User());
+            return "admin/users/create";
+        }
+
+        // Mật khẩu phải dài hơn 6 ký tự
+        if (password.length() < 6) {
+            model.addAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự");
+            model.addAttribute("newUser", new User());
+            return "admin/users/create";
+        }
+
+
+        if (!password.equals(confirmPassword)) {
+            model.addAttribute("error", "Mật khẩu xác nhận không khớp");
+            model.addAttribute("newUser", new User());
+            return "admin/users/create";
         }
 
         if (userService.existsByEmail(email)) {
-            redirectAttributes.addFlashAttribute("error", "Email đã tồn tại");
-            return "redirect:/admin/users/create";
+            model.addAttribute("error", "Email đã tồn tại");
+            model.addAttribute("newUser", new User());
+            return "admin/users/create";
         }
 
+        // Lưu user
         User newUser = new User();
         newUser.setName(name);
-        newUser.setEmail(email.toLowerCase());
+        newUser.setEmail(email);
         newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setAdmin(isAdmin != null && (isAdmin.equals("on") || isAdmin.equals("true")));
+        newUser.setAdmin(isAdmin != null);
 
         userService.save(newUser);
 
-        redirectAttributes.addFlashAttribute("success", "Tạo tài khoản thành công!");
-        return "redirect:/admin/users/index";
-    }
+        // 🟢 THÀNH CÔNG → TRẢ VỀ TRANG LIST NGAY (KHÔNG REDIRECT)
+        model.addAttribute("success", "Tạo tài khoản thành công!");
+        model.addAttribute("users", userService.findAll());
+        injectUser(model);
 
+        return "admin/users/index";  // load trực tiếp trang danh sách
+    }
 
     // ---------- SHOW EDIT FORM ----------
     @GetMapping("/users/edit/{id}")
@@ -160,41 +212,57 @@ public class AdminController {
 
     // ---------- UPDATE USER ----------
     @PostMapping("/users/edit/{id}")
-    public String updateUser(@PathVariable Long id,
-                             @RequestParam String name,
-                             @RequestParam String email,
-                             @RequestParam(required = false) String isAdmin,
-                             RedirectAttributes redirectAttributes) {
-        if (!hasAdminRole()) {
-            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền truy cập.");
-            return "redirect:/admin/account/login";
+    public String updateUser(
+            @PathVariable Long id,
+            @ModelAttribute("editingUser") User userForm,
+            BindingResult result,
+            @RequestParam(value = "isAdmin", required = false) String isAdmin,
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
+
+        // Kiểm tra quyền
+        if (principal == null || !hasAdminRole()) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền!");
+            return "redirect:/admin/users";
         }
 
-        Optional<User> opt = userService.findById(id);
-        if (opt.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Người dùng không tồn tại");
-            return "redirect:/admin/users/index";
+        // Kiểm tra user tồn tại
+        User editingUser = userService.findById(id).orElse(null);
+        if (editingUser == null) {
+            redirectAttributes.addFlashAttribute("error", "Người dùng không tồn tại!");
+            return "redirect:/admin/users";
         }
 
-        if (name == null || name.isBlank()) {
-            redirectAttributes.addFlashAttribute("error", "Tên không được để trống");
+        String emailLower = userForm.getEmail().trim().toLowerCase();
+
+        // Kiểm tra định dạng email
+        if (!emailLower.endsWith("@gmail.com") && !emailLower.endsWith("@yopmail.com")) {
+            redirectAttributes.addFlashAttribute("error", "Email chỉ được phép dùng @gmail.com hoặc @yopmail.com!");
+            redirectAttributes.addFlashAttribute("editingUser", userForm);
             return "redirect:/admin/users/edit/" + id;
         }
 
-        if (!isValidEmail(email)) {
-            redirectAttributes.addFlashAttribute("error", "Email không hợp lệ");
+        // Kiểm tra trùng email
+        if (!editingUser.getEmail().equalsIgnoreCase(emailLower)
+                && userService.existsByEmail(emailLower)) {
+
+            redirectAttributes.addFlashAttribute("error", "Email '" + emailLower + "' đã được sử dụng!");
+            redirectAttributes.addFlashAttribute("editingUser", userForm);
             return "redirect:/admin/users/edit/" + id;
         }
 
-        User user = opt.get();
-        user.setName(name);
-        user.setEmail(email.toLowerCase());
-        user.setAdmin(isAdmin != null && (isAdmin.equals("on") || isAdmin.equals("true")));
-        userService.save(user);
+        // Cập nhật thông tin
+        editingUser.setName(userForm.getName().trim());
+        editingUser.setEmail(emailLower);
+        editingUser.setAdmin(isAdmin != null);
 
-        redirectAttributes.addFlashAttribute("success", "Cập nhật thành công");
+        userService.save(editingUser);
+
+        redirectAttributes.addFlashAttribute("success", "Cập nhật thành công!");
+
         return "redirect:/admin/users/index";
     }
+
 
     // ---------- DELETE USER ----------
     @GetMapping("/users/delete/{id}")
@@ -234,11 +302,11 @@ public class AdminController {
     }
 
     // ---------- CATEGORY ----------
-    private final CategoryService categoryservice;
+    private final CategoryService categoryService;
 
     @GetMapping("/categories/index")
     public String listCategory(Model model) {
-        model.addAttribute("categories", categoryservice.findAll());
+        model.addAttribute("categories", categoryService.findAll());
         return "admin/categories/index";
     }
 
@@ -250,15 +318,106 @@ public class AdminController {
 
     @PostMapping("/categories/save")
     public String save(@ModelAttribute Category category) {
-        categoryservice.save(category);
+        categoryService.save(category);
         return "redirect:/admin/categories/index";
     }
 
+    // Hiển thị form chỉnh sửa danh mục
+    @GetMapping("/categories/edit/{id}")
+    public String showEditCategoryForm(@PathVariable Long id, Model model) {
+        Optional<Category> category = categoryService.findById(id);
+        if (category.isPresent()) {
+            model.addAttribute("category", category.get());
+            return "admin/categories/edit";  // Chuyển đến form chỉnh sửa
+        } else {
+            model.addAttribute("error", "Danh mục không tồn tại");
+            return "redirect:/admin/categories/index";
+        }
+    }
+
+    // Cập nhật thông tin danh mục
+    @PostMapping("/categories/update/{id}")
+    public String updateCategory(@PathVariable Long id, @ModelAttribute Category category, RedirectAttributes redirectAttributes) {
+        Optional<Category> existingCategory = categoryService.findById(id);
+        if (existingCategory.isPresent()) {
+            Category updatedCategory = existingCategory.get();
+            updatedCategory.setName(category.getName());  // Cập nhật tên danh mục
+            updatedCategory.setDescription(category.getDescription());  // Cập nhật mô tả
+
+            categoryService.save(updatedCategory);  // Lưu danh mục đã cập nhật
+            redirectAttributes.addFlashAttribute("success", "Danh mục đã được cập nhật thành công.");
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Danh mục không tồn tại.");
+        }
+        return "redirect:/admin/categories/index";  // Quay lại danh sách danh mục
+    }
+
+    // Xóa danh mục
     @PostMapping("/categories/delete/{id}")
-    public String delete(@PathVariable Long id) {
-        categoryservice.delete(id);
+    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            categoryService.delete(id);
+            redirectAttributes.addFlashAttribute("success", "Danh mục đã được xóa.");
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa danh mục.");
+        }
         return "redirect:/admin/categories/index";
     }
+
+    @Autowired
+    private ContactMessageRepository contactRepo;
+
+    // Danh sách liên hệ
+    @GetMapping("/contact/index")
+    public String listContact(Model model) {
+        model.addAttribute("contacts", contactRepo.findAll());
+        return "admin/contact/index";
+    }
+
+    //Trang detail
+    @GetMapping("/contact/detail/{id}")
+    public String contactDetail(@PathVariable Long id, Model model) {
+        ContactMessage msg = contactRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy liên hệ!"));
+
+        model.addAttribute("contact", msg);
+        return "admin/contact/detail";
+    }
+
+    // Form trả lời
+    @GetMapping("/contact/reply/{id}")
+    public String replyForm(@PathVariable Long id, Model model) {
+        ContactMessage msg = contactRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy liên hệ!"));
+
+        model.addAttribute("contact", msg);
+        return "admin/contact/reply";
+    }
+
+    // Admin gửi trả lời
+    @PostMapping("/contact/reply/{id}")
+    public String sendReply(@PathVariable Long id,
+                            @RequestParam("adminReply") String adminReply) {
+
+        ContactMessage msg = contactRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy liên hệ!"));
+
+        msg.setAdminReply(adminReply);
+        msg.setReplyDate(LocalDateTime.now());
+        msg.setReplied(true);
+
+        contactRepo.save(msg);
+
+        return "redirect:/admin/contact/detail/" + id;
+    }
+
+
+
+
+
+
+
+
 
 
     // ---------- REDIRECT ROOT ----------

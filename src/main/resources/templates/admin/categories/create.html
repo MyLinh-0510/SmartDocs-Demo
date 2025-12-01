@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <title>Thêm danh mục</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
     <link th:href="@{/css/dashboard.css}" rel="stylesheet">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <link th:href="@{/css/table_button.css}" rel="stylesheet">
 
     <style>
+        /* Layout chung */
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -24,6 +27,9 @@
             flex: 1;
             padding: 30px;
             background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .main-content h1 {
@@ -31,10 +37,12 @@
             margin-bottom: 25px;
         }
 
-        form {
+        /* Form */
+        .create-cate-form {
             max-width: 600px;
-            margin-left: 0;
-            margin-top: 0;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 20px;
             background: #fff;
             padding: 25px;
             border: 1px solid #dee2e6;
@@ -57,27 +65,6 @@
             font-size: 14px;
         }
 
-        .btn {
-            padding: 8px 14px;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-right: 8px;
-            text-decoration: none;
-            display: inline-block;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-info  {
-            background-color: #28a745;
-            color: #fff;
-        }
-        .btn-info :hover {
-            background-color: #138496;
-        }
-        .btn-danger { background-color: #dc3545; color: #fff; }
-
-
         @media (max-width: 720px) {
             form { padding: 15px; }
         }
@@ -99,21 +86,20 @@
     <div class="main-content">
         <h1>Thêm danh mục mới</h1>
 
-        <form th:action="@{/admin/categories/save}" th:object="${category}" method="post">
+        <form th:action="@{/admin/categories/save}" class="create-cate-form" th:object="${category}" method="post">
 
-            <!-- Tên danh mục -->
             <label for="name">Tên danh mục:</label>
             <input type="text" id="name" th:field="*{name}" placeholder="Nhập tên danh mục..." required>
 
-            <!-- Mô tả -->
             <label for="description">Mô tả:</label>
             <textarea id="description" th:field="*{description}" rows="4" placeholder="Nhập mô tả..."></textarea>
 
-            <!-- Nút thao tác -->
-            <div style="text-align: center;">
+            <div class="back-link mt-3 text-center">
+                <a th:href="@{/admin/categories/index}" class="btn btn-danger">⬅ Quay lại</a>
                 <button type="submit" class="btn btn-info">💾 Tạo danh mục</button>
-                <a th:href="@{/admin/categories/index}" class="btn btn-danger">⬅ Hủy / Quay lại</a>
             </div>
+
+
         </form>
     </div>
 </div>

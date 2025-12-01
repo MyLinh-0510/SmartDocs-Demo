@@ -2,6 +2,7 @@ package edu.uni.smartdocs.service;
 
 import edu.uni.smartdocs.models.User;
 import edu.uni.smartdocs.repository.UserRepository;
+import edu.uni.smartdocs.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,10 +20,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(username.toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng: " + username));
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .roles(user.getRole().name()) // ví dụ: ADMIN → Spring hiểu là ROLE_ADMIN
-                .build();
+        // SỬA DÒNG NÀY: DÙNG CustomUserDetails
+        return new CustomUserDetails(user);
     }
 }

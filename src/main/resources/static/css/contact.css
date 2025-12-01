@@ -1,0 +1,129 @@
+/* ===== HERO SECTION ===== */
+.contact-hero {
+    background: linear-gradient(90deg, #007bff, #00c6ff);
+    padding: 80px 0;
+    text-align: center;
+    color: #fff;
+}
+
+.contact-hero h1 {
+    font-size: 38px;
+    font-weight: 700;
+}
+
+.contact-hero p {
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+/* ===== CONTACT INFO SECTION ===== */
+.contact-info-section {
+    background: #f2f6fc; /* màu nền nhẹ, phân tách rõ */
+    padding: 60px 0;
+}
+
+.contact-info-section h2 {
+    color: #004f9e;
+}
+
+.contact-item p {
+    margin: 4px 0;
+    font-size: 15px;
+}
+
+.contact-item h5 {
+    margin-bottom: 6px;
+}
+
+/* SECTION TITLE */
+.section-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #0098db;
+    margin-bottom: 10px;
+}
+
+.section-line {
+    border: 0;
+    height: 2px;
+    background: #ddd;
+    margin-bottom: 25px;
+}
+
+/* Detail item */
+.detail-item h5 {
+    font-size: 18px;
+    color: #0056a3;
+}
+
+.detail-item p {
+    margin: 5px 0 0;
+    color: #444;
+}
+
+/* Icons */
+.bi-dot {
+    font-size: 22px;
+    color: #00a0ff;
+    margin-right: 8px;
+}
+
+.bi-geo-alt-fill {
+    color: #00a0ff;
+    margin-right: 5px;
+}
+
+/* Section layout */
+.contact-detail-section {
+    background: #ffffff;
+}
+
+
+/* SECTION nền giống section bản đồ (xám rất nhạt) */
+.contact-form-section {
+    background: #f7f9fc;
+    padding-top: 60px;
+    padding-bottom: 60px;
+}
+
+/* Hộp form */
+.contact-form-box {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 30px;
+    border: 1px solid #e6ecf5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Tiêu đề đẹp hơn */
+.contact-form-box .form-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ff7b00;
+    margin-bottom: 20px;
+}
+
+/* Input đồng bộ đẹp */
+.input-custom, .textarea-custom {
+    border-radius: 8px;
+    border: 1px solid #d5ddea;
+    padding: 10px 14px;
+    margin-bottom: 15px;
+}
+
+/* Nút gửi */
+.btn-submit {
+    background: #ff7b00;
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 17px;
+    border: none;
+    transition: 0.2s;
+    width: 100%;
+}
+
+.btn-submit:hover {
+    background: #ff8e21;
+}
+

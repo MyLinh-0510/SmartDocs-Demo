@@ -34,6 +34,10 @@ public class DocumentService {
         return documentRepository.findAll();
     }
 
+    public long count() {
+        return documentRepository.count();
+    }
+
     // ===== Tìm theo ID =====
     public Optional<Document> findById(Long id) {
         return documentRepository.findById(id);
@@ -165,4 +169,77 @@ public class DocumentService {
         }
         return meta;
     }
+
+    // ===== Tìm kiếm tài liệu theo từ khóa (title) =====
+    public List<Document> findByKeyword(String keyword) {
+        return documentRepository.findByTitleContainingIgnoreCaseAndIsVisibleTrue(keyword);
+    }
+
+    // Service
+    public List<Document> getLatestVisibleDocuments() {
+        return documentRepository.findTop20ByIsVisibleTrueOrderByCreatedAtDesc();
+    }
+
+    public void updateDocument(Long id,
+                               String title,
+                               String description,
+                               Long fileTypeId,
+                               Long categoryId,
+                               String meta,
+                               boolean isVisible,
+                               MultipartFile file,
+                               User editor) {
+
+        Document doc = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
+
+        doc.setTitle(title);
+        doc.setDescription(description);
+        doc.setMeta(meta);
+        doc.setIsVisible(isVisible);
+
+        FileType fileType = fileTypeRepository.findById(fileTypeId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy loại file"));
+        doc.setFileType(fileType);
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục"));
+        doc.setCategory(category);
+
+        // Nếu Document có field updatedBy thì giữ lại
+        // doc.setUpdatedBy(editor);
+
+        if (file != null && !file.isEmpty()) {
+            String newFileName = storeFile(file);
+            doc.setFilename(newFileName);
+        }
+
+        documentRepository.save(doc);
+    }
+
+    private String storeFile(MultipartFile file) {
+        try {
+            Path uploadPath = Paths.get(UPLOAD_DIR);
+
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            String filename = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            Path destination = uploadPath.resolve(filename);
+
+            Files.copy(file.getInputStream(), destination);
+
+            return filename;
+
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi khi lưu file mới: " + e.getMessage());
+        }
+    }
+
+
+
+
+
+
 }

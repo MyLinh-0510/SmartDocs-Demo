@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.security.Principal;
 import java.util.Optional;
 
 @Controller
@@ -106,87 +108,115 @@ public class AuthController {
 
     // ---------- PROFILE ----------
     @GetMapping("/profile")
-    public String profile(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = auth.getName(); // chính là username trong Spring Security
+    public String showProfile(Model model, Principal principal,
+                              @ModelAttribute("success") String successMessage) {
+        if (principal == null) {
+            return "redirect:/admin/account/login";
+        }
 
-        User user = userService.findByEmail(email).orElse(null);
+        String username = principal.getName();
+        User user = userService.findByEmail(username).orElse(null);
+
+        if (user == null) {
+            return "redirect:/admin/account/login";
+        }
+
         model.addAttribute("user", user);
+
+        model.addAttribute("rawPassword", user.getPassword()); // Đây là plaintext nếu bạn lưu plaintext
+
+        // Nếu có thông báo thành công, truyền qua view
+        if (successMessage != null && !successMessage.isEmpty()) {
+            model.addAttribute("success", successMessage);
+        }
 
         return "admin/account/profile";
     }
 
+    // 👤 FORM CHỈNH SỬA THÔNG TIN
+    @GetMapping("/profile-edit")
+    public String editProfileForm(Model model, Principal principal) {
+        if (principal == null) return "redirect:/admin/account/login";
 
-    // ---------- CHANGE PASSWORD ----------
-    @GetMapping("/change-password")
-    public String getChangePassword(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
+        String email = principal.getName();
+        User user = userService.findByEmail(email).orElse(null);
+
+        if (user == null) return "redirect:/admin/account/login";
+
         model.addAttribute("user", user);
-
-        // Hiển thị thông báo nếu có
-        String error = (String) session.getAttribute("error");
-        String success = (String) session.getAttribute("success");
-        model.addAttribute("error", error);
-        model.addAttribute("success", success);
-
-        // Xóa thông báo sau khi hiển thị (tương tự flash message)
-        session.removeAttribute("error");
-        session.removeAttribute("success");
-
-        return "admin/account/change-password";
+        return "admin/account/profile-edit";
     }
 
-    // Xử lý đổi mật khẩu
-    @PostMapping("/change-password")
-    public String postChangePassword(
-            @RequestParam("currentPassword") String currentPassword,
-            @RequestParam("newPassword") String newPassword,
-            @RequestParam("confirmPassword") String confirmPassword,
-            Model model,
-            Authentication authentication
+    @PostMapping("/profile-edit")
+    public String updateProfile(
+            @RequestParam String name,
+            @RequestParam String email,
+            @RequestParam(required = false) String currentPassword,
+            @RequestParam(required = false) String newPassword,
+            @RequestParam(required = false) String confirmPassword,
+            Principal principal,
+            RedirectAttributes redirect
     ) {
-        // ✅ Lấy email người dùng đang đăng nhập từ Security Context
-        String email = authentication.getName();
+        if (principal == null) return "redirect:/admin/account/login";
 
-        System.out.println("Đang đăng nhập: " + authentication.getName());
+        User user = userService.findByEmail(principal.getName()).orElse(null);
+        if (user == null) return "redirect:/admin/account/login";
 
 
-        // Lấy thông tin user từ DB
-        Optional<User> optionalUser = userService.findByEmail(email);
-        if (optionalUser.isEmpty()) {
-            model.addAttribute("error", "Không tìm thấy người dùng.");
-            return "admin/account/change-password";
+        // 1) VALIDATE TÊN
+        if (name.isBlank()) {
+            redirect.addFlashAttribute("error", "Họ tên không được để trống.");
+            return "redirect:/admin/account/profile-edit";
         }
 
-        User dbUser = optionalUser.get();
+        // 2) VALIDATE EMAIL
+        String newEmail = email.toLowerCase();
 
-        // ✅ Kiểm tra hợp lệ
-        if (currentPassword.isEmpty()) {
-            model.addAttribute("error", "Vui lòng nhập mật khẩu hiện tại.");
-            return "admin/account/change-password";
+        if (!newEmail.matches("^[\\w-.]+@[\\w-]+\\.[A-Za-z]{2,}$")) {
+            redirect.addFlashAttribute("error", "Email không hợp lệ.");
+            return "redirect:/admin/account/profile-edit";
         }
 
-        if (newPassword.length() < 6) {
-            model.addAttribute("error", "Mật khẩu mới phải có ít nhất 6 ký tự.");
-            return "admin/account/change-password";
+        // Nếu đổi email → kiểm tra trùng
+        if (!newEmail.equalsIgnoreCase(user.getEmail())) {
+            if (userService.findByEmail(newEmail).isPresent()) {
+                redirect.addFlashAttribute("error", "Email đã tồn tại trong hệ thống.");
+                return "redirect:/admin/account/profile-edit";
+            }
         }
 
-        if (!newPassword.equals(confirmPassword)) {
-            model.addAttribute("error", "Xác nhận mật khẩu không khớp.");
-            return "admin/account/change-password";
+        // 3) VALIDATE ĐỔI MẬT KHẨU (nếu nhập)
+        if (currentPassword != null && !currentPassword.isBlank()) {
+
+            // Kiểm tra mật khẩu cũ
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                redirect.addFlashAttribute("error", "Mật khẩu hiện tại không đúng.");
+                return "redirect:/admin/account/profile-edit";
+            }
+
+            // Kiểm tra độ dài
+            if (newPassword.length() < 6) {
+                redirect.addFlashAttribute("error", "Mật khẩu mới phải từ 6 ký tự.");
+                return "redirect:/admin/account/profile-edit";
+            }
+
+            // Kiểm tra khớp
+            if (!newPassword.equals(confirmPassword)) {
+                redirect.addFlashAttribute("error", "Xác nhận mật khẩu không khớp.");
+                return "redirect:/admin/account/profile-edit";
+            }
+
+            // Cập nhật mật khẩu mới
+            user.setPassword(passwordEncoder.encode(newPassword));
         }
 
-        if (!passwordEncoder.matches(currentPassword, dbUser.getPassword())) {
-            model.addAttribute("error", "Mật khẩu hiện tại không đúng.");
-            return "admin/account/change-password";
-        }
+        // 4) CẬP NHẬT TÊN + EMAIL
+        user.setName(name);
+        user.setEmail(newEmail);
+        userService.save(user);
 
-        // ✅ Cập nhật mật khẩu mới
-        dbUser.setPassword(passwordEncoder.encode(newPassword));
-        userService.save(dbUser);
-
-        // ✅ Chuyển về trang login sau khi đổi mật khẩu
-        return "redirect:/admin/account/login?changed=true";
+        redirect.addFlashAttribute("success", "Cập nhật thông tin thành công!");
+        return "redirect:/admin/account/profile";
     }
 
 
@@ -242,4 +272,5 @@ public class AuthController {
             return "admin/account/reset-password";
         }
     }
+
 }

@@ -13,15 +13,40 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            padding: 20px;
         }
 
-        .register-container {
+        .container {
             background: white;
-            padding: 30px 40px;
+            display: flex;
+            width: 900px;
+            max-width: 100%;
             border-radius: 12px;
+            overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Ảnh bên trái */
+        .image-box {
+            width: 45%;
+            background-color: #e8f5e9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+
+        .image-box img {
             width: 100%;
-            max-width: 400px;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Form bên phải */
+        .register-container {
+            width: 55%;
+            padding: 35px 40px;
+            background: white;
         }
 
         h2 {
@@ -63,7 +88,6 @@
             cursor: pointer;
             font-size: 18px;
             color: #666;
-            transition: color 0.3s ease;
             width: 24px;
             height: 24px;
             display: flex;
@@ -106,71 +130,94 @@
             border-left: 4px solid #28a745;
         }
 
-        .switch-link {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 14px;
+        .switch-link a:hover {
+            text-decoration: underline;
         }
 
-        .switch-link a {
+        .form-footer {
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .form-footer a {
             color: #007bff;
             text-decoration: none;
         }
 
-        .switch-link a:hover {
+        .form-footer a:hover {
             text-decoration: underline;
+        }
+
+        /* Responsive: khi màn hình nhỏ, ảnh ẩn đi */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .image-box {
+                display: none;
+            }
+            .register-container {
+                width: 100%;
+            }
         }
     </style>
 </head>
+
 <body>
-<div class="register-container">
-    <h2>Đăng ký Tài khoản Quản trị</h2>
 
-    <!-- Hiển thị lỗi -->
-    <div th:if="${error}" class="alert" th:text="${error}"></div>
+<div class="container">
 
-    <!-- Hiển thị thành công -->
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <!-- Khung ảnh bên trái -->
+    <div class="image-box">
+        <img src="/images/signin.png" alt="Register Image">
+    </div>
 
-    <form th:action="@{/admin/account/register}" method="post">
-        <div class="form-group">
-            <label>Họ tên:</label>
-            <div class="input-wrapper">
-                <input type="text" name="name" th:value="${name}" required>
+    <!-- Form đăng ký -->
+    <div class="register-container">
+        <h2>Đăng ký tài khoản Admin</h2>
+
+        <div th:if="${error}" class="alert" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <form th:action="@{/admin/account/register}" method="post">
+            <div class="form-group">
+                <label>Họ tên:</label>
+                <div class="input-wrapper">
+                    <input type="text" name="name" th:value="${name}" required>
+                </div>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label>Email:</label>
-            <div class="input-wrapper">
-                <input type="email" name="email" th:value="${email}" required>
+            <div class="form-group">
+                <label>Email:</label>
+                <div class="input-wrapper">
+                    <input type="email" name="email" th:value="${email}" required>
+                </div>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label>Mật khẩu:</label>
-            <div class="input-wrapper">
-                <input type="password" name="password" id="password" required>
-                <span class="toggle-password" data-toggle="password">👁️</span>
+            <div class="form-group">
+                <label>Mật khẩu:</label>
+                <div class="input-wrapper">
+                    <input type="password" name="password" id="password" required>
+                    <span class="toggle-password" data-toggle="password">👁️</span>
+                </div>
             </div>
-        </div>
 
-        <div class="form-group">
-            <label>Xác nhận mật khẩu:</label>
-            <div class="input-wrapper">
-                <input type="password" name="confirmPassword" id="confirmPassword" required>
-                <span class="toggle-password" data-toggle="confirmPassword">👁️</span>
+            <div class="form-group">
+                <label>Xác nhận mật khẩu:</label>
+                <div class="input-wrapper">
+                    <input type="password" name="confirmPassword" id="confirmPassword" required>
+                    <span class="toggle-password" data-toggle="confirmPassword">👁️</span>
+                </div>
             </div>
-        </div>
 
-        <div class="form-group">
             <button type="submit">Đăng ký</button>
-        </div>
 
-        <div class="switch-link">
-            Đã có tài khoản? <a th:href="@{/admin/login}">Đăng nhập</a>
-        </div>
-    </form>
+            <div class="form-footer">
+                Đã có tài khoản? <a th:href="@{/admin/login}">Đăng nhập</a>
+            </div>
+        </form>
+    </div>
+
 </div>
 
 <script>
@@ -190,5 +237,6 @@
         });
     });
 </script>
+
 </body>
 </html>

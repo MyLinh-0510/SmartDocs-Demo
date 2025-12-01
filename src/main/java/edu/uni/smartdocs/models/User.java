@@ -3,6 +3,9 @@ package edu.uni.smartdocs.models;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
 public class User {
@@ -25,18 +28,25 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role = Role.EMPLOYEE; // default value
+    private Role role = Role.EMPLOYEE;
 
     private String resetToken;
 
     private LocalDateTime resetTokenExpiry;
 
-    // ✅ Enum for role
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime updatedAt;
+
     public enum Role {
         ADMIN, CEO, EMPLOYEE
     }
 
-    // ✅ Constructors
+    // Constructors
     public User() {}
 
     public User(String name, String email, String password, boolean isAdmin, Role role) {
@@ -47,7 +57,7 @@ public class User {
         this.role = role;
     }
 
-    // ✅ Getters and Setters
+    // Getters and setters
     public Long getId() { return id; }
 
     public String getName() { return name; }
@@ -70,4 +80,13 @@ public class User {
 
     public LocalDateTime getResetTokenExpiry() { return resetTokenExpiry; }
     public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    // Helper method
+    public String getFullName() {
+        return this.name != null && !this.name.trim().isEmpty() ? this.name : this.email;
+    }
+
 }

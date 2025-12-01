@@ -1,0 +1,224 @@
+/* ===========================
+        TABLE STYLE
+=========================== */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    font-size: 15px;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.table th, .table td {
+    padding: 12px 14px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+.table th {
+    background-color: #f1f1f1;
+}
+
+/* Striped */
+.table tbody tr:nth-child(odd) { background-color: #ffffff; }
+.table tbody tr:nth-child(even) { background-color: #e9e9e9; }
+
+/* Hover */
+.table tbody tr:hover {
+    background-color: #dcdcdc;
+    transition: 0.15s;
+}
+
+
+/* ===========================
+        BUTTON FIX CHUẨN
+=========================== */
+.btn,
+button,
+a.btn {
+    height: 42px !important;
+    padding: 0 20px !important;
+    border-radius: 8px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    gap: 8px !important;
+    font-size: 15px !important;
+    font-weight: 500;
+
+    text-decoration: none !important;
+    white-space: nowrap;
+
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Khi focus vẫn không thêm viền */
+.btn:focus,
+button:focus,
+a.btn:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Nút nhỏ dùng trong bảng */
+.btn-sm {
+    height: 36px !important;
+    padding: 0 14px !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+}
+
+/* Button Colors */
+.btn-add      { background: #fcba03 !important; color: #fff !important; }
+.btn-update    { background: #fd4501 !important; color: #fff !important; }
+.btn-danger   { background: #f1172c !important; color: #fff !important; }
+.btn-edit     { background: #17a2b8 !important; color: #fff !important; }
+.btn-info      { background: #31bbd6 !important; color: #fff !important; }
+.btn-view     { background: #8e8f8f !important; color: #fff !important; }
+
+.btn-add:hover      { background: #f4d406 !important; }
+.btn-update:hover     { background: #e4460d !important; }
+.btn-danger:hover   { background: #c81022 !important; }
+.btn-edit:hover     { background: #138496 !important; }
+.btn-info:hover     { background: #06a1bf !important}
+.btn-view:hover     { background: #515353 !important; color: #fff !important; }
+
+.back-link {
+    margin-top: 30px;
+    text-align: center;
+}
+/* LỖI */
+/* Alert Styles for Success and Error */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Success Message */
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 5px solid #28a745;
+}
+
+/* Error Message */
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 5px solid #f1172c;
+}
+
+/* icon mắt */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper input {
+    width: 100%;
+    padding-right: 50px;  /* tạo khoảng trống cho icon */
+    height: 45px;
+    font-size: 15px;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 35%;  /* căn chính giữa chiều dọc */
+    right: 14px; /* khoảng cách với mép phải input */
+    transform: translateY(-50%); /* căn giữa chính xác */
+    font-size: 20px;
+    cursor: pointer;
+    color: #6c757d;
+    user-select: none;
+}
+
+.toggle-password:hover {
+    color: #0d6efd;
+}
+
+/* ===========================
+        RESPONSIVE
+=========================== */
+
+/* Mobile nhỏ */
+@media (max-width: 480px) {
+    .btn {
+        height: 34px !important;
+        padding: 0 14px !important;
+        font-size: 13px !important;
+    }
+
+    .btn-sm {
+        height: 30px !important;
+        font-size: 12px !important;
+    }
+
+    .table th, .table td {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+}
+
+/* Mobile lớn / Tablet đứng */
+@media (max-width: 768px) {
+    .btn {
+        height: 36px !important;
+        padding: 0 16px !important;
+        font-size: 14px !important;
+    }
+
+    .table th, .table td {
+        padding: 10px;
+        font-size: 13px;
+    }
+}
+
+/* Tablet ngang */
+@media (max-width: 1024px) {
+    .btn {
+        height: 38px !important;
+        padding: 0 18px !important;
+        font-size: 14px !important;
+    }
+}
+
+/* Laptop lớn */
+@media (min-width: 1400px) {
+    .btn {
+        height: 40px !important;
+        padding: 0 20px !important;
+        font-size: 15px !important;
+    }
+}

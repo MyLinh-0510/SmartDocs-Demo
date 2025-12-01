@@ -1,0 +1,74 @@
+/* ===== PAGE WRAPPER ===== */
+body {
+    background-color: #f8f9fa;
+    font-family: "Roboto", sans-serif;
+}
+
+/* ===== PAGE TITLE ===== */
+.history-title {
+    font-weight: 700;
+    font-size: 28px;
+    color: #007bff;
+    margin-bottom: 20px;
+    border-left: 5px solid #ffc107;
+    padding-left: 12px;
+}
+
+/* ===== TABLE STYLE ===== */
+.table-custom {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.table-custom thead {
+    background: linear-gradient(90deg, #007bff, #00c6ff);
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.table-custom td, .table-custom th {
+    vertical-align: middle;
+    padding: 14px;
+}
+
+/* Hover row */
+.table-custom tbody tr:hover {
+    background: #eef7ff;
+    transition: 0.25s;
+}
+
+/* ===== STATUS BADGES ===== */
+.badge-success {
+    background-color: #28a745 !important;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.badge-secondary {
+    background-color: #6c757d !important;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+/* ===== BUTTON DETAIL ===== */
+.btn-detail {
+    background: #00c6ff;
+    color: #fff;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 6px 14px;
+}
+
+.btn-detail:hover {
+    background: #009ad6;
+    color: #fff;
+}
+
+/* Container spacing */
+.container-history {
+    margin-top: 40px;
+    margin-bottom: 60px;
+}

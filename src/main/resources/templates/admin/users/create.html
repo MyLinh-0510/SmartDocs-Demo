@@ -4,194 +4,149 @@
     <meta charset="UTF-8">
     <title>Tạo tài khoản mới</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <link th:href="@{/css/dashboard.css}" rel="stylesheet">
+    <link th:href="@{/css/table_button.css}" rel="stylesheet">
 
     <style>
-        /* ----- Tổng thể ----- */
+        /* Layout chung */
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f6f8;
         }
 
+        #wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
         .main-content {
             flex: 1;
             padding: 30px;
             background-color: #fff;
-            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .main-content h1 {
-            text-align: center;
+            text-align: left;
             margin-bottom: 25px;
-            color: #333;
         }
 
-        /* ----- Alert ----- */
-        .alert {
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            font-weight: 500;
-        }
-
-        .alert-error {
-            background-color: #ffdddd;
-            color: #d8000c;
-            border-left: 4px solid red;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border-left: 4px solid #28a745;
-        }
-
-        /* ----- Form ----- */
-        form {
+        .create-user-form {
             max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            margin-top: 20px;
             background: #fff;
             padding: 25px;
             border: 1px solid #dee2e6;
             border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .checkbox-group {
             margin-bottom: 20px;
+            text-align: left;
         }
 
-        .form-group {
-            margin-bottom: 18px;
+        .checkbox-group input {
+            margin-right: 10px;
         }
 
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-
-        input[type="checkbox"] {
-            margin-right: 8px;
-        }
-
-        /* ----- Nút bấm ----- */
-        .form-actions {
-            text-align: center; /* ✅ Căn giữa 2 nút */
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 8px 14px;
-            border-radius: 4px;
-            font-size: 14px;
-            margin: 0 6px; /* khoảng cách giữa 2 nút */
-            text-decoration: none;
-            display: inline-block;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-info  {
-            background-color: #28a745;
-            color: #fff;
-        }
-
-        .btn-info:hover {
-            background-color: #138496;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: #fff;
-        }
-
-        .btn-danger:hover {
-            background-color: #c82333;
-        }
-
+        /* Responsive */
         @media (max-width: 720px) {
             form {
-                padding: 15px;
-                max-width: 100%;
-            }
-
-            .btn {
-                width: 100%;
-                margin: 6px 0;
-            }
-
-            .form-actions {
-                text-align: center;
-                display: block;
+                padding: 20px;
             }
         }
     </style>
+
 </head>
 <body>
 
 <!-- Navbar -->
 <div th:insert="fragments/navbar :: navbar"></div>
 
-<div class="container">
-    <div class="layout">
+<div id="wrapper">
 
-        <!-- Sidebar -->
-        <div th:insert="fragments/sidebar :: sidebar"></div>
+    <!-- Sidebar -->
+    <div th:insert="fragments/sidebar :: sidebar"></div>
 
-        <!-- Nội dung chính -->
-        <div class="main-content">
-            <h1>Tạo tài khoản mới</h1>
+    <!-- Main Content -->
+    <div class="main-content">
 
-            <!-- Thông báo -->
-            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <h1>Tạo tài khoản mới</h1>
 
-            <!-- Form tạo tài khoản -->
-            <form th:action="@{/admin/users/create}" method="post">
-                <div class="form-group">
-                    <label for="name">Họ tên:</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
+        <!-- Thông báo -->
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
+        <!-- Form tạo tài khoản -->
+        <form th:action="@{/admin/users/create}" class="create-user-form" method="post">
+            <div class="form-group">
+                <label for="name">Họ tên:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
 
-                <div class="form-group">
-                    <label for="password">Mật khẩu:</label>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu:</label>
+                <div class="input-wrapper">
                     <input type="password" id="password" name="password" required>
+                    <span class="toggle-password" data-toggle="password">👁️</span>
                 </div>
+            </div>
 
-                <div class="form-group" style="margin-top:10px;">
-                    <label>
-                        <input type="checkbox" name="isAdmin"> Là quản trị viên (Admin)
-                    </label>
+            <div class="form-group">
+                <label for="confirmPassword">Xác nhận mật khẩu:</label>
+                <div class="input-wrapper">
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <span class="toggle-password" data-toggle="confirmPassword">👁️</span>
                 </div>
+            </div>
 
-                <!-- ✅ Căn giữa hai nút -->
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-info">Tạo tài khoản</button>
-                    <a th:href="@{/admin/users/index}" class="btn btn-danger">Quay lại</a>
-                </div>
-            </form>
-        </div>
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" name="isAdmin"> Là quản trị viên (Admin)
+                </label>
+            </div>
+
+            <div class="back-link mt-3 text-center">
+                <a th:href="@{/admin/users/index}" class="btn btn-danger">⬅ Quay lại</a>
+                <button type="submit" class="btn btn-info">💾 Tạo tài khoản</button>
+            </div>
+
+        </form>
     </div>
 </div>
+
+<script>
+    document.querySelectorAll('.toggle-password').forEach(icon => {
+        icon.addEventListener('click', () => {
+            const inputId = icon.getAttribute('data-toggle');
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = '🙈';
+                icon.classList.add('active');
+            } else {
+                input.type = 'password';
+                icon.textContent = '👁️';
+                icon.classList.remove('active');
+            }
+        });
+    });
+</script>
 
 </body>
 </html>

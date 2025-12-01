@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <title>Danh sách danh mục</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
     <link th:href="@{/css/dashboard.css}" rel="stylesheet">
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <link th:href="@{/css/table_button.css}" rel="stylesheet">
 
     <style>
         body {
@@ -34,57 +37,6 @@
         .add {
             margin-bottom: 30px;
         }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: #fff;
-        }
-
-        .table th, .table td {
-            padding: 12px;
-            border: 1px solid #dee2e6;
-            text-align: left;
-        }
-
-        .table th {
-            background-color: #f1f1f1;
-        }
-
-        /* 🌈 Xen kẽ màu dòng */
-        .table tbody tr:nth-child(odd) {
-            background-color: #ffffff;
-        }
-
-        .table tbody tr:nth-child(even) {
-            background-color: #e1dddd;
-        }
-
-        .btn {
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-right: 5px;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-add { background-color: #fcba03; color: #fff; }
-        .btn-info { background-color: #17a2b8; color: #fff; }
-        .btn-danger { background-color: #dc3545; color: #fff; }
-        .btn-detail { background-color: #eaa95b; color: #fff; }
-        .btn-edit { background-color: #4caf50; color: #fff; }
-
-        .back-link {
-            margin-top: 30px;
-            text-align: center;
-        }
-
-        /* Responsive nhỏ */
-        @media (max-width: 720px) {
-            .table th, .table td { padding: 8px; font-size: 14px; }
-            .add .btn { padding: 8px 10px; font-size: 13px; }
-        }
     </style>
 
 </head>
@@ -93,60 +45,70 @@
 <!-- Navbar -->
 <div th:insert="fragments/navbar :: navbar"></div>
 
-<!-- Layout -->
 <div id="wrapper">
 
     <!-- Sidebar -->
     <div th:insert="fragments/sidebar :: sidebar"></div>
 
-    <!-- Main Content -->
     <div class="main-content">
+
         <h1>Danh sách danh mục</h1>
 
-        <!-- Thêm mới -->
+        <!-- Nút thêm -->
         <div class="add">
             <a th:href="@{/admin/categories/create}" class="btn btn-add">➕ Thêm danh mục</a>
         </div>
 
-        <!-- Bảng danh mục -->
-        <table class="table">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Tên danh mục</th>
-                <th>Mô tả</th>
-                <th>Số tài liệu</th>
-                <th>Hành động</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="cat, iterStat : ${categories}">
-                <td th:text="${iterStat.index + 1}">1</td>
-                <td th:text="${cat.name}">Văn bản</td>
-                <td th:text="${cat.description != null ? cat.description : '-'}">Mô tả</td>
-                <!-- Nếu bạn không load documents trong query, có thể hiển thị số 0 hoặc dùng service count -->
-                <td th:text="${cat.documents != null ? #lists.size(cat.documents) : 0}">0</td>
-                <td>
-                    <a th:href="@{'/admin/categories/edit/' + ${cat.id}}" class="btn btn-sm btn-info">✏️ Sửa</a>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên danh mục</th>
+                    <th>Mô tả</th>
+                    <th>Số tài liệu</th>
+                    <th>Hành động</th>
+                </tr>
+                </thead>
 
-                    <form th:action="@{'/admin/categories/delete/' + ${cat.id}}" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-danger"
-                                onclick="return confirm('Xác nhận xoá danh mục này?')">🗑️ Xoá</button>
-                    </form>
-                </td>
-            </tr>
+                <tbody>
+                <tr th:each="cat, iterStat : ${categories}">
+                    <td th:text="${iterStat.index + 1}">1</td>
+                    <td th:text="${cat.name}">Văn bản</td>
+                    <td th:text="${cat.description != null ? cat.description : '-'}">Mô tả</td>
+                    <td th:text="${cat.documents != null ? #lists.size(cat.documents) : 0}">0</td>
 
-            <!-- Hiển thị khi không có category -->
-            <tr th:if="${#lists.isEmpty(categories)}">
-                <td colspan="6" style="text-align:center; padding:20px;">Chưa có danh mục nào.</td>
-            </tr>
-            </tbody>
-        </table>
+                    <td>
+                        <!-- nút sửa -->
+                        <a th:href="@{'/admin/categories/edit/' + ${cat.id}}"
+                           class="btn btn-edit">
+                            ✏️ Sửa
+                        </a>
 
-        <!-- Quay lại -->
-        <div class="back-link">
+                        <!-- nút xoá -->
+                        <form th:action="@{'/admin/categories/delete/' + ${cat.id}}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('Xác nhận xoá danh mục này?')">
+                                🗑️ Xoá
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(categories)}">
+                    <td colspan="6" style="text-align:center; padding:20px;">
+                        Chưa có danh mục nào.
+                    </td>
+                </tr>
+                </tbody>
+
+            </table>
+        </div>
+
+        <div class="back-link mt-3 text-center">
             <a th:href="@{/admin/dashboard}" class="btn btn-danger">⬅ Quay lại Dashboard</a>
         </div>
+
     </div>
 </div>
 

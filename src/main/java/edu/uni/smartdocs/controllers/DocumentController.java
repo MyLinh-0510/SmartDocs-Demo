@@ -158,4 +158,48 @@ public class DocumentController {
         model.addAttribute("encodedFilename", encodedFileName);
         return "admin/documents/detail";
     }
+
+    // ========================= FORM SỬA =========================
+    @GetMapping("/documents/edit/{id}")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        Document document = documentService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
+
+        model.addAttribute("document", document);
+        model.addAttribute("fileTypes", fileTypeService.findAll());
+        model.addAttribute("categories", categoryService.findAll());
+
+        return "admin/documents/edit"; // file edit.html
+    }
+
+    // ========================= XỬ LÝ SỬA =========================
+    @PostMapping("/documents/edit/{id}")
+    public String updateDocument(@PathVariable Long id,
+                                 @RequestParam("title") String title,
+                                 @RequestParam("description") String description,
+                                 @RequestParam("fileTypeId") Long fileTypeId,
+                                 @RequestParam("categoryId") Long categoryId,
+                                 @RequestParam("meta") String meta,
+                                 @RequestParam(value = "isVisible", defaultValue = "false") boolean isVisible,
+                                 @RequestParam(value = "file", required = false) MultipartFile file,
+                                 RedirectAttributes redirectAttributes,
+                                 @AuthenticationPrincipal UserDetails principal) {
+
+        try {
+            User editor = userRepository.findByEmail(principal.getUsername()).orElse(null);
+
+            documentService.updateDocument(id, title, description, fileTypeId,
+                    categoryId, meta, isVisible, file, editor);
+
+            redirectAttributes.addFlashAttribute("success", "Cập nhật thành công!");
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật tài liệu: " + e.getMessage());
+        }
+
+        return "redirect:/admin/documents/index";
+    }
+
+
+
 }
