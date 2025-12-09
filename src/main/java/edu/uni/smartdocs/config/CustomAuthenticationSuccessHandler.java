@@ -30,7 +30,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                 redirectUrl = "/admin/dashboard";
                 break;
             } else if (role.equals("ROLE_CEO") || role.equals("ROLE_EMPLOYEE")) {
-                redirectUrl = "/site/home";
+                redirectUrl = "/user/home";
                 break;
             }
         }

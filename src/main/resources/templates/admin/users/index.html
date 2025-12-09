@@ -71,6 +71,7 @@
             <tr>
                 <th>ID</th>
                 <th>Tên khách hàng</th>
+                <th>Số điện thoại</th>
                 <th>Email</th>
                 <th>Admin</th>
                 <th>Hành động</th>
@@ -81,6 +82,7 @@
             <tr th:each="user : ${users}">
                 <td th:text="${user.id}"></td>
                 <td th:text="${user.name}"></td>
+                <td th:text="${user.phone}"></td>
                 <td th:text="${user.email}"></td>
                 <td th:text="${user.admin ? 'Yes' : 'No'}"></td>
 

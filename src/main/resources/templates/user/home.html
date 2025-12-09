@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartDocs - Quản lý văn bản & hợp đồng nội bộ</title>
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        /* ====== HERO ====== */
+        .hero {
+            background: linear-gradient(to right, #007bff, #00c6ff);
+            color: white;
+            padding: 90px 20px;
+            text-align: center;
+        }
+        .hero h1 { font-size: 2.8rem; font-weight: 700; }
+        .hero .lead { font-size: 1.2rem; opacity: 0.9; }
+
+        /* ====== CARD & SCROLL ====== */
+        .scroll-wrapper { position: relative; }
+        .scroll-btn {
+            position: absolute;
+            top: 40%;
+            transform: translateY(-50%);
+            z-index: 10;
+            background: #fff;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: 0.2s;
+        }
+        .scroll-btn:hover { background: #007bff; color: white; }
+        .scroll-left { left: -20px; }
+        .scroll-right { right: -20px; }
+
+        .horizontal-scroll {
+            display: flex;
+            gap: 24px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding: 20px 0;
+            scrollbar-width: thin;
+        }
+        .horizontal-scroll::-webkit-scrollbar { height: 8px; }
+        .horizontal-scroll::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 10px;
+        }
+
+        .category-item { flex: 0 0 260px; scroll-snap-align: start; }
+        .category-card, .card-inner {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+        .category-card:hover, .card-inner:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.18);
+        }
+
+        .text-truncate-ellipsis {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        .doc-card { flex: 0 0 320px; scroll-snap-align: start; }
+
+        /* ====== THỐNG KÊ ====== */
+        .stats-section { background: #f8f9fa; padding: 70px 0; }
+        .stat-box {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+        }
+        .stat-box:hover { transform: translateY(-5px); }
+
+        @media (max-width: 768px) {
+            .doc-card { flex: 0 0 85%; }
+            .hero h1 { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div th:replace="~{fragments/header :: header}"></div>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="container">
+        <h1 class="mb-4">SmartDocs - Hệ thống quản lý văn bản thông minh</h1>
+        <p class="lead mb-4">Tìm kiếm, lưu trữ và quản lý hợp đồng, công văn, báo cáo nhanh chóng, bảo mật tuyệt đối.</p>
+        <form th:action="@{/templates/user/search}" method="get" class="d-flex justify-content-center flex-wrap gap-2">
+            <input type="text" name="keyword" class="form-control w-50" placeholder="Nhập từ khóa tìm kiếm...">
+            <button type="submit" class="btn btn-light btn-lg px-5">
+                <i class="bi bi-search"></i> Tìm kiếm
+            </button>
+        </form>
+    </div>
+</section>
+
+<!-- DANH MỤC NỔI BẬT -->
+<section class="container my-5">
+    <h3 class="text-center mb-4 fw-bold">Danh mục nổi bật</h3>
+
+    <div class="scroll-wrapper">
+        <div class="scroll-btn scroll-left" onclick="scrollLeftBtn('categoryScroll')"><i class="bi bi-chevron-left"></i></div>
+        <div class="scroll-btn scroll-right" onclick="scrollRightBtn('categoryScroll')"><i class="bi bi-chevron-right"></i></div>
+
+        <div class="horizontal-scroll" id="categoryScroll">
+            <div class="category-item" th:each="cat : ${allCategories}"
+                 th:with="name=${cat.name != null ? cat.name.toLowerCase() : ''}">
+                <a th:href="@{/templates/user/search(category=${cat.name})}" class="text-decoration-none">
+                    <div class="category-card p-4 text-center">
+                        <i class="bi" th:switch="${name}" style="font-size: 2.8rem;">
+                            <i th:case="${name.contains('hợp đồng')}" class="bi-file-earmark-text-fill text-primary"></i>
+                            <i th:case="${name.contains('công văn')}" class="bi-envelope-fill text-success"></i>
+                            <i th:case="${name.contains('báo cáo')}" class="bi-bar-chart-fill text-warning"></i>
+                            <i th:case="${name.contains('quy định')}" class="bi-journal-text text-danger"></i>
+                            <i th:case="${name.contains('tài liệu')}" class="bi-archive-fill text-info"></i>
+                            <i th:case="*" class="bi-folder-fill text-secondary"></i>
+                        </i>
+
+                        <h5 class="mt-3" th:text="${cat.name}"></h5>
+                        <p class="text-muted small">
+                            <span th:text="${#strings.length(cat.description) > 30 ?
+                                #strings.substring(cat.description, 0, 30) + '...' :
+                                cat.description}">
+                            </span>
+                        </p>
+                    </div>
+                </a>
+            </div>
+
+            <div th:if="${#lists.isEmpty(allCategories)}" class="text-center w-100 py-5">
+                <p class="text-muted">Chưa có danh mục nào được tạo.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- GIỚI THIỆU -->
+<section class="container my-5">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+            <img th:src="@{/images/smartdocs-intro.png}" alt="SmartDocs" class="img-fluid rounded shadow">
+        </div>
+        <div class="col-lg-6">
+            <h3 class="fw-bold mb-4">Tại sao chọn SmartDocs?</h3>
+            <ul class="list-unstyled">
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-3"></i>Tìm kiếm thông minh, chính xác</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-3"></i>Phân quyền chi tiết theo phòng ban</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-3"></i>Lưu trữ an toàn, bảo mật cao</li>
+                <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-3"></i>Hỗ trợ ký số & tải lên nhanh chóng</li>
+            </ul>
+            <a th:href="@{/templates/user/about}" class="btn btn-primary btn-lg mt-3">Tìm hiểu thêm</a>
+        </div>
+    </div>
+</section>
+
+<!-- THỐNG KÊ -->
+<section class="stats-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <i class="bi bi-file-earmark-text display-5 text-primary"></i>
+                    <h4 class="fw-bold mt-3" th:text="${totalDocs}">1.250+</h4>
+                    <p class="text-muted">Tài liệu được quản lý</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <i class="bi bi-person-workspace display-5 text-success"></i>
+                    <h4 class="fw-bold mt-3" th:text="${totalUsers}">320</h4>
+                    <p class="text-muted">Người dùng nội bộ</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <i class="bi bi-building display-5 text-warning"></i>
+                    <h4 class="fw-bold mt-3" th:text="${#lists.size(allCategories)}">8</h4>
+                    <p class="text-muted">Danh mục tài liệu</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <i class="bi bi-shield-check display-5 text-danger"></i>
+                    <h4 class="fw-bold mt-3">100%</h4>
+                    <p class="text-muted">Bảo mật dữ liệu</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TÀI LIỆU MỚI NHẤT -->
+<section class="container my-5">
+    <h3 class="text-center fw-bold mb-5">Tài liệu mới nhất</h3>
+
+    <div class="scroll-wrapper">
+        <div class="scroll-btn scroll-left" onclick="scrollLeftBtn('docsScroll')"><i class="bi bi-chevron-left"></i></div>
+        <div class="scroll-btn scroll-right" onclick="scrollRightBtn('docsScroll')"><i class="bi bi-chevron-right"></i></div>
+
+        <div class="horizontal-scroll" id="docsScroll">
+            <div class="doc-card" th:each="doc : ${latestDocs}">
+                <div class="card-inner p-3 d-flex flex-column">
+                    <h5 class="title" th:text="${doc.title}"></h5>
+                    <p class="desc text-muted small">
+                        <span th:text="${doc.description != null and #strings.length(doc.description) > 30 ?
+                            #strings.substring(doc.description, 0, 20) + '...xem thêm' :
+                            (doc.description != null ? doc.description : 'Không có mô tả')}">
+                        </span>
+                    </p>
+                    <div class="mt-auto d-flex justify-content-between">
+                        <a th:href="@{/templates/user/detail/{id}(id=${doc.id})}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-eye"></i> Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${latestDocs == null or #lists.isEmpty(latestDocs)}" class="text-center w-100 py-5">
+                <p class="text-muted fs-5">Chưa có tài liệu nào được đăng tải.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- JS Scroll -->
+<script>
+    function scrollLeftBtn(id) {
+        document.getElementById(id).scrollBy({ left: -300, behavior: "smooth" });
+    }
+    function scrollRightBtn(id) {
+        document.getElementById(id).scrollBy({ left: 300, behavior: "smooth" });
+    }
+</script>
+
+</body>
+</html>

@@ -1,8 +1,7 @@
 package edu.uni.smartdocs.service;
 
-import edu.uni.smartdocs.models.ContactMessage;
-import edu.uni.smartdocs.repository.CategoryRepository;
-import edu.uni.smartdocs.repository.ContactMessageRepository;
+import edu.uni.smartdocs.models.Contact;
+import edu.uni.smartdocs.repository.ContactRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,18 +9,17 @@ import java.util.List;
 @Service
 public class ContactService {
 
-    private final ContactMessageRepository repo;
+    private final ContactRepository contactRepository;
+
+    public ContactService(ContactRepository contactRepository) {
+        this.contactRepository = contactRepository;
+    }
 
     public long count() {
-        return repo.count();
+        return contactRepository.count();
     }
 
-    public ContactService(ContactMessageRepository repo) {
-        this.repo = repo;
-    }
-
-    public List<ContactMessage> getContactsByEmail(String email) {
-        return repo.findByUserEmailOrderByCreatedAtDesc(email);
+    public List<Contact> getContactsByEmail(String email) {
+        return contactRepository.findByUserEmailOrderByCreatedAtDesc(email);
     }
 }
-

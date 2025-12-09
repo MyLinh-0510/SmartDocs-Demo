@@ -1,14 +1,21 @@
 package edu.uni.smartdocs.models;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+@Data
 @Entity
 @Table(name = "users", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
-public class User {
+public class User implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,6 +23,9 @@ public class User {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(nullable = true, length = 12)
+    private String phone;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -42,6 +52,12 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "user")
+    private List<Contact> contactMessages;
+
+    @OneToMany(mappedBy = "user")
+    private List<UserDocumentAction> actions;
+
     public enum Role {
         ADMIN, CEO, EMPLOYEE
     }
@@ -56,33 +72,6 @@ public class User {
         this.isAdmin = isAdmin;
         this.role = role;
     }
-
-    // Getters and setters
-    public Long getId() { return id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-
-    public boolean isAdmin() { return isAdmin; }
-    public void setAdmin(boolean admin) { isAdmin = admin; }
-
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
-
-    public String getResetToken() { return resetToken; }
-    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
-
-    public LocalDateTime getResetTokenExpiry() { return resetTokenExpiry; }
-    public void setResetTokenExpiry(LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     // Helper method
     public String getFullName() {

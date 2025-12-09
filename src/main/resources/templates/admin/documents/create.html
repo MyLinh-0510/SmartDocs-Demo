@@ -118,12 +118,8 @@
     <div class="main-content">
         <h1>Thêm tài liệu mới</h1>
 
-        <!-- Hiển thị lỗi -->
-        <div th:if="${errors}" class="error-messages">
-            <ul>
-                <li th:each="err : ${errors}" th:text="${err}"></li>
-            </ul>
-        </div>
+        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
         <!-- Form -->
         <form th:action="@{/admin/documents/create}" class="create-document-form" method="post" enctype="multipart/form-data">
@@ -202,6 +198,7 @@
 
     </div>
 </div>
+
 
 </body>
 </html>

@@ -56,6 +56,16 @@
 
     <h1>Danh sách tài liệu</h1>
 
+    <!-- Thông báo thành công -->
+    <div th:if="${success}" class="alert alert-success" style="font-size: 16px;">
+      <span th:text="${success}"></span>
+    </div>
+
+    <!-- Thông báo lỗi -->
+    <div th:if="${error}" class="alert alert-danger" style="font-size: 16px;">
+      <span th:text="${error}"></span>
+    </div>
+
     <!-- Nút thêm mới -->
     <div class="add">
       <a th:href="@{/admin/documents/create}" class="btn btn-add">➕ Thêm tài liệu mới</a>
@@ -113,6 +123,16 @@
 
   </div>
 </div>
+
+<script>
+  setTimeout(function () {
+    document.querySelectorAll('.alert').forEach(function (alert) {
+      alert.style.transition = "opacity 0.4s";
+      alert.style.opacity = "0";
+      setTimeout(() => alert.remove(), 400);
+    });
+  }, 5000);
+</script>
 
 </body>
 </html>

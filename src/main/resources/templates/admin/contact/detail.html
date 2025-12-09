@@ -76,6 +76,7 @@
 
         .btn-group-custom {
             margin-top: 30px;
+            text-align: center;
         }
     </style>
 </head>
@@ -108,6 +109,11 @@
                     <div class="info-box">
                         <label>Họ tên:</label>
                         <p th:text="${contact.userName}"></p>
+                    </div>
+
+                    <div class="info-box">
+                        <label>Số điện thoại:</label>
+                        <p th:text="${contact.phone}"></p>
                     </div>
 
                     <div class="info-box">
@@ -167,6 +173,7 @@
                    class="btn btn-info ms-2">
                     ✏️ Xem / chỉnh sửa trả lời
                 </a>
+
             </div>
 
         </div>

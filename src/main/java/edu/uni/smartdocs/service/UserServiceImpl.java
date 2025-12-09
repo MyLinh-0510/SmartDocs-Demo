@@ -42,6 +42,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean existsByPhone(String phone) {
+        return userRepository.existsByPhone(phone);
+    }
+
+    @Override
+    public Optional<User> findByPhone(String phone) {
+        return userRepository.findByPhone(phone); // hoặc findByPhoneContaining, hoặc Optional...
+    }
+
+    @Override
     public void save(User user) {
 
         userRepository.save(user);

@@ -9,9 +9,17 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByEmail(String email);
-    Optional<User> findByResetToken(String token);
+
     boolean existsByEmail(String email);
+
+    Optional<User> findByEmail(String email);
+
+    boolean existsByPhone(String phone);
+
+    Optional<User> findByPhone(String phone);
+
+    Optional<User> findByResetToken(String token);
+
     long countByIsAdminTrue();
 
     @Query("SELECT MONTH(u.createdAt), COUNT(u) FROM User u " +

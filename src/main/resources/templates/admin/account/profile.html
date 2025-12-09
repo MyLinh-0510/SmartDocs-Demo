@@ -129,8 +129,9 @@
     </div>
 
     <div class="profile-card">
-      <p><strong>Họ tên:</strong> <span th:text="${user.name}">Admin</span></p>
-      <p><strong>Email:</strong> <span th:text="${user.email}">admin@gmail.com</span></p>
+      <p><strong>Họ tên:</strong> <span th:text="${user.name}"></span></p>
+      <p><strong>Số điện thoại:</strong> <span th:text="${user.phone}"></span></p>
+      <p><strong>Email:</strong> <span th:text="${user.email}"></span></p>
 
       <div class="button-group">
         <a th:href="@{/admin/dashboard}" class="btn btn-danger btn-action text-white">

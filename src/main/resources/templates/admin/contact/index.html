@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <title>Danh sách liên hệ</title>
@@ -13,7 +14,7 @@
     <style>
         body {
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: #f4f6f8;
         }
 
@@ -46,18 +47,107 @@
             color: red;
             font-weight: bold;
         }
-    </style>
 
+        /* ================= CHAT POPUP (Messenger Style) ================= */
+
+        .chat-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 380px;
+            height: 520px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 999999;
+        }
+
+        .chat-header-popup {
+            background: #0d6efd;
+            color: white;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .chat-body-popup {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            background: #f0f2f5;
+        }
+
+        .chat-input-popup {
+            padding: 12px;
+            display: flex;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+
+        .chat-input-popup input {
+            flex: 1;
+            border-radius: 20px;
+            padding: 8px 14px;
+            border: 1px solid #ccc;
+        }
+
+        .chat-input-popup button {
+            margin-left: 10px;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 20px;
+            background: #0d6efd;
+            color: white;
+            font-weight: 600;
+        }
+
+        .message-row {
+            display: flex;
+            margin-bottom: 12px;
+        }
+
+        .message-user { justify-content: flex-start; }
+        .message-admin { justify-content: flex-end; }
+
+        .user-bubble {
+            background: #e4e6eb;
+            padding: 10px 14px;
+            border-radius: 16px;
+            border-bottom-left-radius: 0;
+            max-width: 75%;
+        }
+
+        .admin-bubble {
+            background: #0d6efd;
+            color: white;
+            padding: 10px 14px;
+            border-radius: 16px;
+            border-bottom-right-radius: 0;
+            max-width: 75%;
+        }
+
+        .msg-time {
+            font-size: 11px;
+            margin-top: 4px;
+            opacity: .7;
+        }
+    </style>
 </head>
+
 <body>
 
 <!-- Navbar -->
-<div th:insert="fragments/navbar :: navbar"></div>
+<div th:insert="~{fragments/navbar :: navbar}"></div>
 
 <div id="wrapper">
 
     <!-- Sidebar -->
-    <div th:insert="fragments/sidebar :: sidebar"></div>
+    <div th:insert="~{fragments/sidebar :: sidebar}"></div>
 
     <!-- Main Content -->
     <div class="main-content">
@@ -87,24 +177,20 @@
                     <td th:text="${c.createdAt}"></td>
 
                     <td>
-                        <span th:if="${c.replied}"
-                              class="status-replied">Đã trả lời</span>
-
-                        <span th:if="${!c.replied}"
-                              class="status-pending">Chưa trả lời</span>
+                        <span th:if="${c.replied}" class="status-replied">Đã trả lời</span>
+                        <span th:if="${!c.replied}" class="status-pending">Chưa trả lời</span>
                     </td>
 
                     <td>
-                        <a th:href="@{'/admin/contact/detail/' + ${c.id}}"
-                           class="btn btn-view">👁️ Xem</a>
+                        <a th:href="@{'/admin/contact/detail/' + ${c.id}}" class="btn btn-view">👁️ Xem</a>
 
-                        <a th:if="${!c.replied}"
-                           th:href="@{'/admin/contact/reply/' + ${c.id}}"
-                           class="btn btn-info">💬 Trả lời</a>
+                        <a href="javascript:void(0)"
+                           th:attr="onclick=|openAdminChat(${c.id}, '${c.userName}')|"
+                           class="btn btn-warning" style="margin-left:5px;">
+                            💬 Chat
+                        </a>
 
-                        <a th:if="${c.replied}"
-                           th:href="@{'/admin/contact/reply/' + ${c.id}}"
-                           class="btn btn-info">✏️ Xem trả lời</a>
+
                     </td>
                 </tr>
                 </tbody>
@@ -117,6 +203,96 @@
 
     </div>
 </div>
+
+
+<!-- ================= CHAT POPUP ================= -->
+
+<div id="chatAdminPopup" class="chat-popup">
+
+    <div class="chat-header-popup">
+        <span id="chatWithName">💬 Chat với <strong>Người dùng</strong></span>
+        <button class="btn-close" onclick="closeAdminChat()"></button>
+    </div>
+
+
+    <div id="chatAdminBody" class="chat-body-popup">
+        <div id="chatAdminMessages"></div>
+    </div>
+
+    <div class="chat-input-popup">
+        <input id="chatAdminInput" type="text" placeholder="Nhập tin nhắn...">
+        <button id="chatAdminSend">Gửi</button>
+    </div>
+
+</div>
+
+<script>
+
+    function openAdminChat(contactId, userName) {
+
+        window.currentContactId = contactId;
+
+        // Set tên user lên popup
+        document.getElementById("chatWithName").innerHTML =
+            `💬 Chat với <strong>${userName}</strong>`;
+
+        document.getElementById("chatAdminPopup").style.display = "flex";
+
+        const box = document.getElementById("chatAdminMessages");
+        box.innerHTML = `<div class="text-center text-muted">Đang tải...</div>`;
+
+        fetch("/admin/contact/messages/" + contactId)
+            .then(res => res.json())
+            .then(messages => {
+                box.innerHTML = "";
+
+                messages.forEach(m => {
+                    box.innerHTML += `
+                <div class="message-row ${m.fromAdmin ? 'message-admin' : 'message-user'}">
+                    <div class="${m.fromAdmin ? 'admin-bubble' : 'user-bubble'}">
+                        ${m.content}
+                        <div class="msg-time">${m.createdAt.replace('T',' ')}</div>
+                    </div>
+                </div>`;
+                });
+
+                box.scrollTop = box.scrollHeight;
+            });
+    }
+
+
+    function closeAdminChat() {
+        document.getElementById("chatAdminPopup").style.display = "none";
+    }
+
+    document.getElementById("chatAdminSend").onclick = sendAdminMessage;
+
+    function sendAdminMessage() {
+        const input = document.getElementById("chatAdminInput");
+        const content = input.value.trim();
+        if (!content) return;
+
+        input.value = "";
+
+        const box = document.getElementById("chatAdminMessages");
+        box.innerHTML += `
+            <div class="message-row message-admin">
+                <div class="admin-bubble">${content}</div>
+            </div>`;
+        box.scrollTop = box.scrollHeight;
+
+        fetch("/admin/contact/message/send", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                contactId: window.currentContactId,
+                content: content,
+                admin: true
+            })
+        });
+    }
+
+</script>
 
 </body>
 </html>

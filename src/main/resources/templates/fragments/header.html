@@ -60,6 +60,71 @@
             font-size: 0.9rem;
             opacity: 0.9;
         }
+
+        .chat-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            height: 450px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.25);
+            display: none;
+            flex-direction: column;
+            z-index: 9999;
+        }
+
+        .chat-header-popup {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .chat-body-popup {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background: #ecf0f1;
+        }
+
+        .chat-input-popup {
+            padding: 10px;
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input-popup input {
+            flex: 1;
+        }
+
+        /* Bong bóng chat */
+        .message-row { margin-bottom: 10px; display: flex; }
+
+        .message-user { justify-content: flex-end; }
+        .message-admin { justify-content: flex-start; }
+
+        .user-bubble {
+            background: #1abc9c;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 70%;
+        }
+
+        .admin-bubble {
+            background: #bdc3c7;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 70%;
+        }
     </style>
 </head>
 <body>
@@ -81,7 +146,7 @@
 
                 <!-- Trang chủ -->
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/site/home}">
+                    <a class="nav-link" th:href="@{/user/home}">
                         <i class="bi bi-house me-1"></i> Trang chủ
                     </a>
                 </li>
@@ -96,7 +161,7 @@
                     <ul class="dropdown-menu">
                         <!-- Tài liệu của tôi -->
                         <li>
-                            <a class="dropdown-item" th:href="@{/site/documents-user}">
+                            <a class="dropdown-item" th:href="@{/user/documents-user}">
                                 <i class="bi bi-folder-heart text-primary me-2"></i>
                                 <strong>Tài liệu của tôi</strong>
                             </a>
@@ -107,7 +172,7 @@
                         <th:block th:each="category : ${allCategories}">
                             <li>
                                 <a class="dropdown-item"
-                                   th:href="@{/site/search(category=${category.name})}"
+                                   th:href="@{/user/search(category=${category.name})}"
                                    th:text="${category.name}">
                                     <i class="bi bi-folder me-2"></i> Danh mục
                                 </a>
@@ -123,7 +188,7 @@
 
                         <!-- Tìm kiếm nâng cao -->
                         <li>
-                            <a class="dropdown-item" th:href="@{/site/search}">
+                            <a class="dropdown-item" th:href="@{/user/search}">
                                 <i class="bi bi-search text-muted me-2"></i> Tìm kiếm nâng cao...
                             </a>
                         </li>
@@ -132,7 +197,7 @@
 
                 <!-- Liên hệ -->
                 <li class="nav-item">
-                    <a class="nav-link" th:href="@{/site/contact}">
+                    <a class="nav-link" th:href="@{/user/contactu}">
                         <i class="bi bi-envelope me-1"></i> Liên hệ
                     </a>
                 </li>
@@ -154,6 +219,14 @@
                     </ul>
                 </li>
 
+                <!-- Chat -->
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="nav-link" onclick="openMainChatPopup()">
+                        <i class="bi bi-chat-dots fs-5"></i>
+                    </a>
+                </li>
+
+
                 <!-- User Dropdown -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
@@ -165,9 +238,9 @@
                         <span th:text="${#authentication?.principal?.fullName} ?: 'Người dùng'">Người dùng</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" th:href="@{/site/profile-user}"><i class="bi bi-person me-2"></i> Thông tin cá nhân</a></li>
-                        <li><a class="dropdown-item" th:href="@{/site/change-password-user}"><i class="bi bi-key me-2"></i> Đổi mật khẩu</a></li>
-                        <li><a class="dropdown-item" th:href="@{/site/contact/history}"><i class="bi bi-clock-history me-2"></i> Lịch sử liên hệ</a></li>
+                        <li><a class="dropdown-item" th:href="@{/user/accountu/profile-user}"><i class="bi bi-person me-2"></i> Thông tin cá nhân</a></li>
+                        <li><a class="dropdown-item" th:href="@{/user/accountu/change-password-user}"><i class="bi bi-key me-2"></i> Đổi mật khẩu</a></li>
+                        <li><a class="dropdown-item" th:href="@{/user/contactu/history}"><i class="bi bi-clock-history me-2"></i> Lịch sử liên hệ</a></li>
 
                         <li><hr class="dropdown-divider"></li>
                         <li>
@@ -184,5 +257,81 @@
         </div>
     </div>
 </nav>
+
+<!-- POPUP CHAT CHÍNH TRÊN HEADER -->
+<div id="mainChatPopup" class="chat-popup" style="display:none;">
+
+    <div class="chat-header-popup">
+        <span>Trao đổi với Admin</span>
+        <button class="btn-close" onclick="closeMainChatPopup()"></button>
+    </div>
+
+    <div id="mainChatBody" class="chat-body-popup">
+        <div id="mainChatMessages"></div>
+    </div>
+
+    <div class="chat-input-popup">
+        <input id="mainChatInput" type="text" placeholder="Nhập tin nhắn...">
+        <button id="mainChatSendBtn">Gửi</button>
+    </div>
+
+</div>
+
+
+<script>
+    function openMainChatPopup() {
+        document.getElementById("mainChatPopup").style.display = "flex";
+
+        // Load tin nhắn lịch sử user ↔ admin
+        fetch('/user/chat/main')
+            .then(res => res.json())
+            .then(list => {
+                let box = document.getElementById("mainChatMessages");
+                box.innerHTML = "";
+
+                list.forEach(m => {
+                    box.innerHTML += `
+                    <div class="message-row ${m.fromAdmin ? 'message-admin' : 'message-user'}">
+                        <div class="${m.fromAdmin ? 'admin-bubble' : 'user-bubble'}">
+                            ${m.content}
+                            <div class="small text-muted mt-1">${m.createdAt.replace('T',' ')}</div>
+                        </div>
+                    </div>`;
+                });
+
+                box.scrollTop = box.scrollHeight;
+            });
+    }
+
+    function closeMainChatPopup() {
+        document.getElementById("mainChatPopup").style.display = "none";
+    }
+
+</script>
+
+//Gửi tin nhawsn
+<script>
+    document.getElementById("mainChatSendBtn").onclick = function () {
+        const content = document.getElementById("mainChatInput").value.trim();
+        if (!content) return;
+
+        // Hiện trước UI
+        let box = document.getElementById("mainChatMessages");
+        box.innerHTML += `
+        <div class="message-row message-user">
+            <div class="user-bubble">${content}</div>
+        </div>`;
+
+        document.getElementById("mainChatInput").value = "";
+
+        // Gửi API
+        fetch('/user/chat/main/send', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ content: content })
+        });
+    };
+
+</script>
 </body>
 </html>

@@ -88,8 +88,7 @@
     <div class="main-content">
         <h1>Chỉnh sửa danh mục</h1>
 
-        <form th:action="@{/admin/categories/save}" class="edit-cate-form" th:object="${category}" method="post">
-            <!-- Sử dụng th:field để liên kết với thuộc tính của đối tượng category -->
+        <form th:action="@{/admin/categories/update/{id}(id=${category.id})}" class="edit-cate-form" th:object="${category}" method="post">
             <input type="hidden" th:field="*{id}" />
 
             <label for="name">Tên danh mục:</label>

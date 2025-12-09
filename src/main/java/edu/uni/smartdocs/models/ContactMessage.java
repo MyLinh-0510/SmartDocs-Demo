@@ -1,5 +1,6 @@
 package edu.uni.smartdocs.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -7,30 +8,28 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "contact_messages")
+@Table(name = "contact_message")
 public class ContactMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String userName;
-    private String userEmail;
-    private String subject;
+    @ManyToOne
+    @JsonBackReference
+    private Contact contact;
+
+
+    private boolean fromAdmin; // true = admin trả lời, false = người dùng hỏi
 
     @Column(columnDefinition = "TEXT")
-    private String message;
-
-    private boolean replied = false;
-
-    @Column(columnDefinition = "TEXT")
-    private String adminReply;
+    private String content;
 
     private LocalDateTime createdAt;
-    private LocalDateTime replyDate;
 
     @PrePersist
     public void onCreate() {
         createdAt = LocalDateTime.now();
     }
 }
+
