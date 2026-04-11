@@ -1,14 +1,17 @@
 package edu.uni.smartdocs.controllers.admin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import edu.uni.smartdocs.models.Contact;
+import edu.uni.smartdocs.config.WebConfig;
 import edu.uni.smartdocs.models.User;
-import edu.uni.smartdocs.repository.ContactMessageRepository;
 import edu.uni.smartdocs.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,10 +19,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.File;
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,6 +37,7 @@ public class AdminController {
     private final PasswordEncoder passwordEncoder;
     private final DocumentService documentService;
     private final CategoryService categoryService;
+    private final LogDownloadService logDownloadService;
 
 
     @Autowired
@@ -72,13 +77,7 @@ public class AdminController {
         // ----- Tài liệu được tải nhiều nhất -----
         model.addAttribute("bestSellingProductsJson",
                 objectMapper.writeValueAsString(
-                        List.of(
-                                Map.of("name", "Hợp đồng lao động", "sales", 189),
-                                Map.of("name", "Quy chế công ty", "sales", 142),
-                                Map.of("name", "Nội quy an toàn", "sales", 98),
-                                Map.of("name", "Hướng dẫn sử dụng", "sales", 76),
-                                Map.of("name", "Báo cáo tài chính", "sales", 65)
-                        )
+                        logDownloadService.getTop5Downloaded()
                 )
         );
 
@@ -89,16 +88,36 @@ public class AdminController {
 
     // ---------- USERS LIST ----------
     @GetMapping("/users/index")
-    public String listUsers(Model model) {
+    public String listUsers(
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) List<String> roles,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+
         if (!hasAdminRole()) {
             model.addAttribute("error", "Bạn không có quyền truy cập.");
             return "admin/account/login";
         }
 
-        model.addAttribute("users", userService.findAll());
+        Page<User> userPage = userService.search(
+                phone,
+                email,
+                roles,
+                page,
+                size
+        );
+
+        model.addAttribute("users", userPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", userPage.getTotalPages());
+        model.addAttribute("size", size);
+
         injectUser(model);
         return "admin/users/index";
     }
+
 
     // ---------- CREATE USER ----------
     @GetMapping("/users/create")
@@ -108,100 +127,162 @@ public class AdminController {
             return "admin/account/login";
         }
 
-        model.addAttribute("newUser", new User());
+        User user = new User();
+        user.setAvatar("default.jpg");
+
+        model.addAttribute("newUser", user);
         injectUser(model);
         return "admin/users/create";
     }
 
     @PostMapping("/users/create")
-    public String createUser(@RequestParam String name,
+    public String createUser(@RequestParam("avatarFile") MultipartFile avatarFile,
+                             @RequestParam String name,
                              @RequestParam String phone,
                              @RequestParam String email,
                              @RequestParam String password,
                              @RequestParam String confirmPassword,
-                             @RequestParam(required = false) String isAdmin,
+                             @RequestParam String role,
                              Model model) {
 
-        // Kiểm tra role admin
+        // Check quyền
         if (!hasAdminRole()) {
             model.addAttribute("error", "Bạn không có quyền truy cập.");
             return "admin/account/login";
         }
 
-        // Validate dữ liệu
+        // giữ laji data form
+        User formUser = new User();
+        formUser.setName(name);
+        formUser.setPhone(phone);
+        formUser.setEmail(email);
+        formUser.setAvatar("default.jpg");
+
+        try {
+            formUser.setRole(User.Role.valueOf(role));
+        } catch (Exception e) {
+            formUser.setRole(User.Role.EMPLOYEE);
+        }
+
+        // validate
         if (name == null || name.isBlank()) {
             model.addAttribute("error", "Tên không được để trống");
-            model.addAttribute("newUser", new User());
-            return "admin/users/create";
-        }
-        if (email == null || !email.matches("^[\\w-.]+@gmail\\.com$")) {
-            model.addAttribute("error", "Email phải là địa chỉ Gmail hợp lệ (vd: ten@gmail.com)");
-            model.addAttribute("newUser", new User());
+            model.addAttribute("newUser", formUser);
+            injectUser(model);
             return "admin/users/create";
         }
 
-        //Kiểm tra số điện thoại
+        if (email == null || !email.matches("^[\\w-.]+@gmail\\.com$")) {
+            model.addAttribute("error", "Email phải là Gmail hợp lệ (vd: ten@gmail.com)");
+            model.addAttribute("newUser", formUser);
+            injectUser(model);
+            return "admin/users/create";
+        }
+
         if (phone != null) phone = phone.trim();
 
         if (phone == null || !phone.matches("^\\d{10}$")) {
             model.addAttribute("error", "Số điện thoại phải gồm đúng 10 chữ số!");
-            model.addAttribute("newUser", new User());
+            model.addAttribute("newUser", formUser);
+            injectUser(model);
             return "admin/users/create";
         }
 
         if (userService.existsByPhone(phone)) {
-            model.addAttribute("error", "Số điện thoại đã được sử dụng bởi tài khoản khác!");
-            model.addAttribute("newUser", new User());
+            model.addAttribute("error", "Số điện thoại đã được sử dụng!");
+            model.addAttribute("newUser", formUser);
+            injectUser(model);
             return "admin/users/create";
         }
 
-
-        // Mật khẩu không được trống
         if (password == null || password.isBlank()) {
             model.addAttribute("error", "Mật khẩu không được để trống");
-            model.addAttribute("newUser", new User());
+            model.addAttribute("newUser", formUser);
+            injectUser(model);
             return "admin/users/create";
         }
 
-        // Mật khẩu phải dài hơn 6 ký tự
         if (password.length() < 6) {
             model.addAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự");
-            model.addAttribute("newUser", new User());
+            model.addAttribute("newUser", formUser);
+            injectUser(model);
             return "admin/users/create";
         }
-
 
         if (!password.equals(confirmPassword)) {
             model.addAttribute("error", "Mật khẩu xác nhận không khớp");
-            model.addAttribute("newUser", new User());
+            model.addAttribute("newUser", formUser);
+            injectUser(model);
             return "admin/users/create";
         }
 
         if (userService.existsByEmail(email)) {
             model.addAttribute("error", "Email đã tồn tại");
-            model.addAttribute("newUser", new User());
+            model.addAttribute("newUser", formUser);
+            injectUser(model);
             return "admin/users/create";
         }
 
-        // Lưu user
+        // tạo user
         User newUser = new User();
-        newUser.setName(name);
-        newUser.setPhone(phone);
-        newUser.setEmail(email);
+        newUser.setName(name.trim());
+        newUser.setPhone(phone.trim());
+        newUser.setEmail(email.trim().toLowerCase());
         newUser.setPassword(passwordEncoder.encode(password));
-        newUser.setAdmin(isAdmin != null);
+        newUser.setRole(User.Role.valueOf(role));
+        newUser.syncAdminFromRole();
 
-        userService.save(newUser);
+        // upload avatar
+        String avatarFileName = "default.jpg";
 
-        // 🟢 THÀNH CÔNG → TRẢ VỀ TRANG LIST NGAY (KHÔNG REDIRECT)
-        model.addAttribute("success", "Tạo tài khoản thành công!");
-        model.addAttribute("users", userService.findAll());
-        injectUser(model);
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                String contentType = avatarFile.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    model.addAttribute("error", "File upload phải là hình ảnh!");
+                    model.addAttribute("newUser", formUser);
+                    injectUser(model);
+                    return "admin/users/create";
+                }
 
-        return "admin/users/index";  // load trực tiếp trang danh sách
+                String uploadDir = WebConfig.UPLOAD_ROOT + "avatars/";
+                File dir = new File(uploadDir);
+                if (!dir.exists()) dir.mkdirs();
+
+                String originalName = avatarFile.getOriginalFilename();
+                String fileName = generateUniqueFileName(uploadDir, originalName);
+
+                File saveFile = new File(dir, fileName);
+                avatarFile.transferTo(saveFile);
+
+                avatarFileName = fileName;
+                formUser.setAvatar(fileName);
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                model.addAttribute("error", "Upload avatar thất bại!");
+                model.addAttribute("newUser", formUser);
+                injectUser(model);
+                return "admin/users/create";
+            }
+        }
+
+        newUser.setAvatar(avatarFileName);
+
+        // save
+        try {
+            userService.saveWithAdminLimit(newUser, false);
+        } catch (RuntimeException ex) {
+            model.addAttribute("error", ex.getMessage());
+            model.addAttribute("newUser", formUser);
+            injectUser(model);
+            return "admin/users/create";
+        }
+
+        return "redirect:/admin/users/index";
     }
 
-    // ---------- SHOW EDIT FORM ----------
     @GetMapping("/users/edit/{id}")
     public String showEditUser(@PathVariable Long id, Model model) {
         if (!hasAdminRole()) {
@@ -217,33 +298,32 @@ public class AdminController {
             return "admin/users/index";
         }
 
-        //model.addAttribute("userToEdit", opt.get());
         model.addAttribute("editingUser", opt.get());
         injectUser(model);
         return "admin/users/edit";
     }
 
-    // ---------- UPDATE USER ----------
     @PostMapping("/users/edit/{id}")
     public String updateUser(
             @PathVariable Long id,
             @ModelAttribute("editingUser") User userForm,
             BindingResult result,
-            @RequestParam(value = "isAdmin", required = false) String isAdmin,
+            @RequestParam("avatarFile") MultipartFile avatarFile,
+            @RequestParam String role,
             RedirectAttributes redirectAttributes,
             Principal principal) {
 
         // Kiểm tra quyền
         if (principal == null || !hasAdminRole()) {
             redirectAttributes.addFlashAttribute("error", "Bạn không có quyền!");
-            return "redirect:/admin/users";
+            return "redirect:/admin/users/index";
         }
 
         // Kiểm tra user tồn tại
         User editingUser = userService.findById(id).orElse(null);
         if (editingUser == null) {
             redirectAttributes.addFlashAttribute("error", "Người dùng không tồn tại!");
-            return "redirect:/admin/users";
+            return "redirect:/admin/users/index";
         }
 
         String emailLower = userForm.getEmail().trim().toLowerCase();
@@ -264,7 +344,7 @@ public class AdminController {
             return "redirect:/admin/users/edit/" + id;
         }
 
-        String phone = userForm.getPhone();
+        String phone = userForm.getPhone() != null ? userForm.getPhone().trim() : null;
 
         if (phone != null) {
             phone = phone.trim();
@@ -277,50 +357,98 @@ public class AdminController {
             return "redirect:/admin/users/edit/" + id;
         }
 
-        // Kiểm tra trùng số điện thoại (chỉ khi thay đổi)
-        String oldPhone = editingUser.getPhone() != null ? editingUser.getPhone().trim() : null;
+        if (phone != null && !phone.equals(editingUser.getPhone())
+                && userService.existsByPhone(phone)) {
 
-        if (phone != null && !phone.equals(oldPhone)) {
-            if (userService.existsByPhone(phone)) {
-                redirectAttributes.addFlashAttribute("error",
-                        "Số điện thoại " + phone + " đã được sử dụng bởi tài khoản khác!");
+            redirectAttributes.addFlashAttribute("error", "Số điện thoại đã tồn tại!");
+            redirectAttributes.addFlashAttribute("editingUser", userForm);
+            return "redirect:/admin/users/edit/" + id;
+        }
+
+        // Cập nhật thông tin
+        editingUser.setName(userForm.getName().trim());
+        editingUser.setPhone(phone);
+        editingUser.setEmail(emailLower);
+        editingUser.setRole(User.Role.valueOf(role));
+        editingUser.syncAdminFromRole();
+
+        // update avatar
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                String contentType = avatarFile.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    redirectAttributes.addFlashAttribute("error", "File upload phải là hình ảnh!");
+                    redirectAttributes.addFlashAttribute("editingUser", userForm);
+                    return "redirect:/admin/users/edit/" + id;
+                }
+
+                String uploadDir = WebConfig.UPLOAD_ROOT + "avatars/";
+                File dir = new File(uploadDir);
+                if (!dir.exists()) dir.mkdirs();
+
+                String originalName = avatarFile.getOriginalFilename();
+                String fileName = generateUniqueFileName(uploadDir, originalName);
+
+                File saveFile = new File(dir, fileName);
+                avatarFile.transferTo(saveFile);
+
+                // (optional) xóa ảnh cũ nếu không phải default
+                if (editingUser.getAvatar() != null && !editingUser.getAvatar().equals("default.jpg")) {
+                    File old = new File(uploadDir + editingUser.getAvatar());
+                    if (old.exists()) old.delete();
+                }
+
+                editingUser.setAvatar(fileName);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                redirectAttributes.addFlashAttribute("error", "Upload avatar thất bại!");
                 redirectAttributes.addFlashAttribute("editingUser", userForm);
                 return "redirect:/admin/users/edit/" + id;
             }
         }
 
-        // Cập nhật thông tin
-        editingUser.setName(userForm.getName().trim());
-        editingUser.setPhone(phone != null ? phone.trim() : null);
-        editingUser.setEmail(emailLower);
-        editingUser.setAdmin(isAdmin != null);
-
-        userService.save(editingUser);
+        // lưu
+        try {
+            userService.saveWithAdminLimit(editingUser, true);
+        } catch (RuntimeException ex) {
+            redirectAttributes.addFlashAttribute("error", ex.getMessage());
+            redirectAttributes.addFlashAttribute("editingUser", userForm);
+            return "redirect:/admin/users/edit/" + id;
+        }
 
         redirectAttributes.addFlashAttribute("success", "Cập nhật thành công!");
 
         return "redirect:/admin/users/index";
     }
 
-    // ---------- DELETE USER ----------
-    @GetMapping("/users/delete/{id}")
-    public String deleteUser(@PathVariable Long id, Model model) {
-        if (!hasAdminRole()) {
-            model.addAttribute("error", "Bạn không có quyền truy cập.");
-            return "admin/account/login";
-        }
-
+    // khóa account người dùng
+    @PostMapping("/users/lock/{id}")
+    public String lockUser(@PathVariable Long id,
+                           RedirectAttributes redirectAttributes) {
         try {
-            userService.deleteById(id);
-            model.addAttribute("success", "Người dùng đã được xóa");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            model.addAttribute("error", "Lỗi khi xóa người dùng");
+            User user = userService.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+            boolean wasEnabled = user.isEnabled();
+
+            userService.toggleLockUser(id);
+
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    wasEnabled
+                            ? "🔒 Khóa tài khoản thành công!"
+                            : "🔓 Mở khóa tài khoản thành công!"
+            );
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    "Có lỗi xảy ra khi cập nhật tài khoản!"
+            );
         }
 
-        model.addAttribute("users", userService.findAll());
-        injectUser(model);
-        return "admin/users/index";
+        return "redirect:/admin/users/index";
     }
 
     // ---------- UTILS ----------
@@ -338,6 +466,93 @@ public class AdminController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("user", auth.getPrincipal());
     }
+
+    //ten anh khi upload
+    private String generateUniqueFileName(String uploadDir, String originalFileName) {
+        File file = new File(uploadDir + originalFileName);
+        if (!file.exists()) {
+            return originalFileName;
+        }
+
+        String name = originalFileName;
+        String baseName = name;
+        String extension = "";
+
+        int dotIndex = name.lastIndexOf(".");
+        if (dotIndex != -1) {
+            baseName = name.substring(0, dotIndex);
+            extension = name.substring(dotIndex);
+        }
+
+        int count = 1;
+        String newName;
+        do {
+            newName = baseName + "(" + count + ")" + extension;
+            file = new File(uploadDir + newName);
+            count++;
+        } while (file.exists());
+
+        return newName;
+    }
+
+    // Tải template
+    @GetMapping("/users/template")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<byte[]> downloadTemplate() {
+
+        String header = "name,phone,email,password,role\n"
+                + "Nguyen Van A,0912345678,a@gmail.com,123456,EMPLOYEE\n";
+
+        byte[] content = header.getBytes();
+
+        return org.springframework.http.ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=user_template.csv")
+                .header("Content-Type", "text/csv")
+                .body(content);
+    }
+
+    // Upload file csv
+    @PostMapping("/users/import")
+    public String importUsers(
+            @RequestParam("file") MultipartFile file,
+            RedirectAttributes redirectAttributes) {
+
+        if (!hasAdminRole()) {
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền!");
+            return "redirect:/admin/users/index";
+        }
+
+        if (file.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Vui lòng chọn file CSV!");
+            return "redirect:/admin/users/index";
+        }
+
+        // ❗ CHECK ĐỊNH DẠNG FILE
+        String filename = file.getOriginalFilename();
+        if (filename == null || !filename.toLowerCase().endsWith(".csv")) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Chỉ được upload file định dạng .csv!");
+            return "redirect:/admin/users/index";
+        }
+
+        try {
+            List<String> errors = userService.importUsersFromCsv(file);
+
+            if (!errors.isEmpty()) {
+                redirectAttributes.addFlashAttribute("error",
+                        "Import thất bại do dữ liệu không hợp lệ:\n" + String.join("<br>", errors));
+            } else {
+                redirectAttributes.addFlashAttribute("success",
+                        "Import người dùng thành công!");
+            }
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi đọc file CSV!");
+        }
+
+        return "redirect:/admin/users/index";
+    }
+
 
     // ---------- REDIRECT ROOT ----------
     @GetMapping

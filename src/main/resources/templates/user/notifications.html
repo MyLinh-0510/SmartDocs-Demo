@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông báo</title>
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" th:href="@{/css/category.css}">
+    <link rel="stylesheet" th:href="@{/css/notification.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        body {
+            background-color: #f5f6fa;
+            font-family: "Segoe UI", sans-serif;
+            padding-top: 90px;
+        }
+
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="fixed-header">
+    <div th:insert="fragments/header :: header"></div>
+</div>
+
+<div class="container mt-4">
+
+    <h3 class="notification-title">
+        <i class="bi bi-bell-fill me-1"></i> Thông báo
+        <span class="badge bg-danger"
+              th:if="${unreadCount > 0}"
+              th:text="${unreadCount}"></span>
+    </h3>
+
+    <!-- LIST -->
+    <ul class="list-group notification-list"
+        th:if="${!#lists.isEmpty(notifications)}">
+
+        <li class="list-group-item notification-item"
+            th:each="n : ${notifications}"
+            th:data-id="${n.id}"
+            th:data-message="${n.message}"
+            th:data-time="${#temporals.format(n.createdAt, 'dd/MM/yyyy HH:mm')}"
+            th:classappend="${n.isRead} ? 'notification-read' : 'notification-unread fw-bold'">
+
+            <div th:text="${n.message}"></div>
+
+            <div class="notification-time mt-1"
+                 th:text="${#temporals.format(n.createdAt, 'dd/MM/yyyy HH:mm')}">
+            </div>
+        </li>
+    </ul>
+
+    <!-- EMPTY -->
+    <div class="text-muted mt-4 text-center"
+         th:if="${#lists.isEmpty(notifications)}">
+        <i class="bi bi-inbox"></i> Không có thông báo nào
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<div th:insert="~{fragments/footer :: footer}"></div>
+
+<!-- NOTI -->
+<div th:replace="~{fragments/notifyModal :: notifyModal}"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script th:src="@{/js/notification.js}"></script>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+/* ===== DROPDOWN ===== */
+.doc-dropdown {
+    width: 260px;
+    padding: 6px 0;
+    border: none;
+    border-radius: 12px;
+    background: #1f2d3d;
+}
+
+/* ===== ITEM ===== */
+.doc-dropdown .dropdown-item {
+    color: #eaeaea;
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+.doc-dropdown .dropdown-item:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+}
+
+/* ===== SCROLL SAU 10 ITEM ===== */
+/* 1 item ~ 42px → 10 item ≈ 420px */
+.doc-scroll-10 {
+    max-height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* QUAN TRỌNG: tránh bị bootstrap chặn */
+.doc-scroll-10 {
+    overflow-y: auto !important;
+}
+
+/* ===== SCROLLBAR ===== */
+.doc-scroll-10::-webkit-scrollbar {
+    width: 6px;
+}
+
+.doc-scroll-10::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 4px;
+}
+
+.doc-scroll-10::-webkit-scrollbar-thumb:hover {
+    background: #9aa4ad;
+}

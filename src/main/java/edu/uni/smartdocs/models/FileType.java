@@ -25,7 +25,7 @@ public class FileType {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // ===== CONSTRUCTORS =====
+    // CONSTRUCTORS
     public FileType() {
     }
 

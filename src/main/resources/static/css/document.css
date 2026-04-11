@@ -1,0 +1,1221 @@
+/* FIX HEADER – KHÔNG BỊ MẤT KHI SCROLL */
+.navbar-custom {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 99999;
+    background-color: #2c3e50;
+}
+
+/* Chừa chỗ cho header, tránh bị nội dung đè */
+body {
+    padding-top: 60px;
+    background: #f3f6fb;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ===== HERO ===== */
+.hero-section {
+    position: relative;
+    padding: 90px 0;
+    background: url("/images/doc1.jpg") center/cover no-repeat;
+    text-align: center;
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            to right,
+            rgba(15, 32, 65, 0.75),
+            rgba(15, 32, 65, 0.55)
+    );
+}
+
+.hero-section .container {
+    position: relative;
+    max-width: 520px;
+    padding: 32px 28px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.08);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+.hero-section h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.hero-section p {
+    font-size: 15px;
+    color: #e5e7eb;
+    margin: 0;
+}
+
+/* Tất cả tiêu đề section */
+section h3 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    letter-spacing: -0.3px;
+}
+
+/* Subtitle ngay sau h3 (nếu có) */
+section h3 + p {
+    margin-top: -12px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Badge NEW đứng cạnh h3 */
+.latest-doc-section .container {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tạo hàng ngang cho h3 + badge */
+.latest-doc-section h3,
+.latest-doc-section .badge-new {
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Gom h3 và badge-new thành 1 dòng */
+.latest-doc-section h3 {
+    display: inline-flex;
+    gap: 12px;
+}
+
+/* Đẩy badge-new lên cùng hàng với h3 */
+.latest-doc-section .badge-new {
+    align-self: flex-start;
+    margin-left: 12px;
+    margin-top: -28px; /* QUAN TRỌNG: kéo badge lên ngang h3 */
+    height: 22px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+}
+
+
+/* Riêng SEARCH section */
+.doc-search-section h3 {
+    font-size: 24px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    section h3 {
+        font-size: 20px;
+    }
+}
+
+.latest-doc-section h3 {
+    display: inline-block !important;
+    margin-bottom: 0;
+}
+
+.latest-doc-section .badge-new {
+    display: inline-block !important;
+    vertical-align: middle;
+    margin-left: 10px;
+    margin-top: -6px;
+}
+
+
+/* ===== SEARCH ===== */
+.doc-search-section {
+    padding: 45px 0;
+    background: #f8fafc;
+}
+
+.doc-search-box {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+    margin-top: 30px;
+}
+
+.doc-search-box input,
+.doc-search-box select {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+}
+
+.doc-search-box button {
+    padding: 12px 22px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+/* ===== SEARCH RESULT – PDF PREVIEW ===== */
+.doc-result-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px,1fr));
+    gap: 22px;
+    margin-top: 28px;
+}
+
+/* CARD */
+.doc-card {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 12px;
+    box-shadow: 0 12px 28px rgba(0,0,0,.14);
+    display: flex;
+    flex-direction: column;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+
+/* ICON ACTIONS (STAR / PIN) */
+.doc-card {
+    position: relative;
+}
+
+.doc-actions {
+    display: flex;
+    gap: 16px;
+    margin: 10px 0 6px;
+    padding-left: 2px;
+}
+
+.doc-card h6 {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+.doc-actions i {
+    font-size: 20px;
+    color: #9ca3af;
+    cursor: pointer;
+    background: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    transition: color .2s ease, transform .2s ease;
+}
+
+.doc-actions i:hover {
+    transform: scale(1.2);
+}
+
+.doc-actions .bi-star-fill.active {
+    color: #facc15;
+}
+
+.doc-actions .bi-bookmark-fill.active {
+    color: #2563eb;
+}
+
+.doc-actions .bi-pin-angle-fill.active {
+    color: #dc2626;
+}
+
+.doc-actions i {
+    color: #adb5bd;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease;
+    font-size: 18px;
+}
+
+.doc-actions i.active {
+    transform: scale(1.15);
+}
+
+/* ⭐ FAVORITE */
+.doc-actions i.bi-star-fill.active {
+    color: #f5c518;
+}
+
+/* 🔖 SAVED */
+.doc-actions i.bi-bookmark-fill.active {
+    color: #0d6efd;
+}
+
+/* 📌 PINNED */
+.doc-actions i.bi-pin-angle-fill.active {
+    color: #198754;
+}
+
+
+/* SEARCH RESULT HORIZONTAL */
+.doc-result-wrapper {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 16px 4px 20px;
+    margin-top: 12px;
+
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ẩn scrollbar mặc định (đẹp hơn) */
+.doc-result-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.doc-result-wrapper::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 999px;
+}
+
+.doc-result-wrapper::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 999px;
+}
+
+.doc-result-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Mỗi card cố định chiều ngang */
+.doc-result-wrapper .doc-card {
+    flex: 0 0 240px;
+    max-width: 240px;
+}
+
+.doc-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    padding: 12px;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.doc-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+/* ===== ICON ACTION ===== */
+.doc-actions {
+    gap: 12px;
+    width: 100%;
+    margin: 8px 100px;
+}
+
+.doc-actions i {
+    font-size: 22px;
+    cursor: pointer;
+    color: #9ca3af;
+    transition: color .2s ease, transform .2s ease;
+}
+
+.doc-actions i.active {
+    color: #f5c542;
+}
+
+
+.doc-actions .bi-star-fill.active {
+    color: #efd41e;
+}
+
+.doc-actions .bi-star-fill:hover {
+    color: #f5f10b;
+}
+
+.doc-actions .bi-bookmark-fill.active {
+    color: #2563eb;
+}
+.doc-actions .bi-bookmark-fill:hover {
+    color: #024fff;
+}
+
+.doc-actions .bi-pin-angle-fill.active {
+    color: #dc2626;
+}
+.doc-actions .bi-pin-angle-fill:hover {
+    color: #fa0707;
+}
+
+.doc-card-footer {
+    display: flex;
+    gap: 8px;
+}
+
+.doc-card-footer .btn {
+    flex: 1;
+    font-size: 13px;
+    padding: 6px 0;
+    border-radius: 8px;
+}
+
+/* 🔥 FIX MODAL BỊ HEADER ĐÈ */
+.modal {
+    z-index: 2000 !important;
+}
+
+.modal-backdrop {
+    z-index: 1999 !important;
+}
+
+/* 🔥 FIX HEADER KHÔNG ĐÈ */
+header, .navbar {
+    z-index: 1000 !important;
+}
+
+/* 🎨 CENTER MODAL ĐẸP HƠN */
+.modal-dialog {
+    margin-top: 100px;
+}
+
+/* ✨ STYLE MODAL SHARE CHO XỊN */
+#shareModal .modal-content {
+    border-radius: 16px;
+    padding: 10px;
+}
+
+#shareModal .btn-primary {
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 10px;
+}
+
+/* 📋 INPUT LINK */
+#shareResult input {
+    font-size: 13px;
+}
+
+.doc-category {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* ===== FOOTER BUTTON ===== */
+.doc-card-footer {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.doc-card-footer .btn {
+    flex: 1;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+}
+
+
+/* ===== FEATURED CATEGORY ===== */
+.featured-category-section {
+    padding: 60px 0;
+    background: #ffffff;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 36px;
+}
+
+.section-header h3 {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.section-header p {
+    color: #6b7280;
+    margin: 0;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 22px;
+}
+
+.category-card {
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
+    border-radius: 18px;
+    padding: 26px 20px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(0,0,0,.1);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 36px rgba(0,0,0,.18);
+}
+
+.category-card i {
+    font-size: 34px;
+    color: #2563eb;
+    margin-bottom: 10px;
+}
+
+.category-card h6 {
+    font-size: 16px;
+    font-weight: 700;
+    margin: 6px 0 4px;
+}
+
+.category-card span {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+/*==== TÀI LIỆU XEM NHIỀU ==== */
+.popular-doc-section {
+    padding: 55px 0;
+    background: #fff;
+}
+
+.popular-doc-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.popular-doc-card {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 22px rgba(0,0,0,.12);
+    position: relative;
+}
+
+.popular-doc-card .rank {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-weight: 700;
+    color: #ef4444;
+}
+
+/* ===== TÀI LIỆU ĐÃ LƯU ===== */
+.saved-doc-section {
+    padding: 50px 0;
+    background: linear-gradient(135deg,#eef2ff,#fdf4ff);
+}
+
+.saved-doc-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.12);
+}
+
+/* ===== ĐÃ XEM GẦN ĐÂY ==== */
+.history-doc-section {
+    padding: 50px 0;
+    background: #fff;
+}
+
+.history-list li {
+    padding: 10px 0;
+    border-bottom: 1px dashed #e5e7eb;
+    font-size: 14px;
+}
+.saved-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.saved-tabs i {
+    font-size: 22px;
+    margin-left: 12px;
+    cursor: pointer;
+    color: #bbb;
+}
+
+.saved-tabs i.active {
+    color: #ffc107;
+}
+
+/* ===== LATEST DOCUMENTS (PDF PREVIEW) ===== */
+.latest-doc-section {
+    background: #f8fafc;
+    padding: 30px 0;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* Header */
+.latest-doc-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.latest-doc-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Badge NEW ở tiêu đề */
+.badge-new {
+    background: #22c55e;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+/* Wrapper */
+.latest-doc-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+/* Mỗi file */
+.doc-item {
+    position: relative;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+.doc-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+}
+
+/* Tên file */
+.doc-item .doc-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: #0f172a;
+    line-height: 1.4;
+}
+
+/* Mô tả hoặc thời gian */
+.doc-item .doc-meta {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+/* Badge NEW trên mỗi file */
+.doc-item::after {
+    content: "NEW";
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #22c55e;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
+}
+
+
+/* Wrapper dùng cho <img> preview PDF */
+.doc-preview-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #eef2f6;
+    margin-bottom: 12px;
+}
+
+/* Khung ảnh */
+.pdf-page-frame {
+    width: 100%;
+    height: 100%;
+}
+
+/* Ảnh preview PDF */
+.doc-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Fallback khi không load được preview */
+.doc-preview-fallback {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    color: #ef4444;
+    font-weight: 700;
+    font-size: 13px;
+    gap: 6px;
+}
+
+.doc-preview-fallback i {
+    font-size: 32px;
+}
+
+/* Header LATEST gom h3 + NEW thành 1 hàng */
+.latest-doc-section .latest-doc-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* Reset mọi style cũ của h3 trong latest */
+.latest-doc-section .latest-doc-header h3 {
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    line-height: 1.2;
+}
+
+/* Badge NEW nằm đúng hàng */
+.latest-doc-section .latest-doc-header .badge-new {
+    margin: 0 !important;
+    align-self: center !important;
+    display: inline-flex !important;
+    align-items: center;
+    height: auto;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff;
+}
+
+/* Mobile an toàn */
+@media (max-width: 768px) {
+    .latest-doc-section .latest-doc-header {
+        gap: 8px;
+    }
+}
+
+/* =====================================================
+   SAVED DOCUMENTS – HORIZONTAL SCROLL (ADD ONLY)
+   ===================================================== */
+
+.saved-doc-section {
+    padding: 60px 0;
+    background: linear-gradient(135deg, #eef2ff, #fdf4ff);
+}
+
+/* Header + tabs */
+.saved-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.saved-header h3 {
+    margin: 0;
+}
+
+/* Tabs icon */
+.saved-tabs {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.saved-tabs i {
+    font-size: 22px;
+    cursor: pointer;
+    color: #9ca3af;
+    transition: transform .2s ease, color .2s ease;
+}
+
+.saved-tabs i:hover {
+    transform: scale(1.15);
+}
+
+.saved-tabs i.active {
+    color: #facc15;
+}
+
+/* ===== WRAPPER CUỘN NGANG ===== */
+.saved-doc-wrapper {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 14px 4px 22px;
+
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Scrollbar đẹp */
+.saved-doc-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.saved-doc-wrapper::-webkit-scrollbar-track {
+    background: #e5e7eb;
+    border-radius: 999px;
+}
+
+.saved-doc-wrapper::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 999px;
+}
+
+.saved-doc-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* ===== CARD ===== */
+.saved-doc-wrapper .doc-card {
+    flex: 0 0 240px;
+    max-width: 240px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.12);
+    display: flex;
+    flex-direction: column;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.saved-doc-wrapper .doc-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 36px rgba(0,0,0,.18);
+}
+
+/* Preview */
+.saved-doc-wrapper .doc-preview-wrapper {
+    aspect-ratio: 3 / 4;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f1f5f9;
+    margin-bottom: 10px;
+}
+
+/* Title */
+.saved-doc-wrapper h6 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 6px 0 10px;
+    line-height: 1.4;
+}
+
+/* Footer button */
+.saved-doc-wrapper .doc-card-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.saved-doc-wrapper .doc-card-footer .btn {
+    flex: 1;
+    height: 36px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 10px;
+}
+
+/* Empty text */
+.saved-doc-wrapper .text-muted {
+    padding: 18px 6px;
+    font-size: 14px;
+}
+
+/* =====================================================
+   POPULAR DOCUMENTS – HORIZONTAL SCROLL (ADD ONLY)
+   ===================================================== */
+
+.popular-doc-section {
+    padding: 55px 0;
+    background: #ffffff;
+}
+
+/* Wrapper cuộn ngang giống Latest / Saved */
+.popular-doc-wrapper {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 14px 4px 22px;
+
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Scrollbar đẹp */
+.popular-doc-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.popular-doc-wrapper::-webkit-scrollbar-track {
+    background: #e5e7eb;
+    border-radius: 999px;
+}
+
+.popular-doc-wrapper::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 999px;
+}
+
+.popular-doc-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Card dùng CHUNG doc-card (không tạo card mới) */
+.popular-doc-wrapper .doc-card {
+    flex: 0 0 240px;
+    max-width: 240px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.12);
+    display: flex;
+    flex-direction: column;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+/* Hover nổi bật hơn */
+.popular-doc-wrapper .doc-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 36px rgba(0,0,0,.18);
+}
+
+/* Preview */
+.popular-doc-wrapper .doc-preview-wrapper {
+    aspect-ratio: 3 / 4;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f1f5f9;
+    margin-bottom: 10px;
+}
+
+/* Title */
+.popular-doc-wrapper h6 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 6px 0 10px;
+    line-height: 1.4;
+}
+
+/* Footer */
+.popular-doc-wrapper .doc-card-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.popular-doc-wrapper .doc-card-footer .btn {
+    flex: 1;
+    height: 36px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 10px;
+}
+
+.total-download {
+    font-size: 14px;
+    color: #374151;
+}
+
+.total-download b {
+    color: #2563eb;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.download-count {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #6c757d;
+    text-align: center;
+}
+
+.download-count b {
+    color: #198754;
+    font-weight: 600;
+}
+
+/* =========================
+   RELATED DOCUMENTS
+========================= */
+
+/* =========================
+   RELATED DOCUMENTS – SAME AS DOC CARD
+========================= */
+
+.related-doc-wrapper {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 14px 4px 22px;
+
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+.related-doc-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.related-doc-wrapper::-webkit-scrollbar-track {
+    background: #e5e7eb;
+    border-radius: 999px;
+}
+
+.related-doc-wrapper::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 999px;
+}
+
+.related-doc-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Card dùng chung doc-card */
+.related-doc-wrapper .doc-card {
+    flex: 0 0 240px;
+    max-width: 240px;
+}
+
+
+/* WRAPPER SCROLL */
+.category-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 10px;
+}
+
+/* Ẩn scrollbar xấu (tuỳ chọn) */
+.category-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+.category-scroll::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+/* GRID HORIZONTAL */
+.category-grid {
+    display: flex;
+    gap: 16px;
+    flex-wrap: nowrap;
+}
+
+/* CARD */
+.category-card {
+    min-width: 160px;
+    flex: 0 0 auto;
+
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+}
+
+/* ICON */
+.category-card i {
+    font-size: 28px;
+    color: #0d6efd;
+    margin-bottom: 8px;
+}
+
+/* TEXT */
+.category-card h6 {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+/* =====================================================
+   LATEST DOCUMENTS – HORIZONTAL SCROLL (FIX)
+   ===================================================== */
+
+.latest-doc-wrapper {
+    display: flex !important;
+    gap: 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 14px 4px 22px;
+
+    flex-wrap: nowrap;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Scrollbar đẹp */
+.latest-doc-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.latest-doc-wrapper::-webkit-scrollbar-track {
+    background: #e5e7eb;
+    border-radius: 999px;
+}
+
+.latest-doc-wrapper::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+    border-radius: 999px;
+}
+
+.latest-doc-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Card KHÔNG BAO GIỜ xuống dòng */
+.latest-doc-wrapper .doc-card,
+.latest-doc-wrapper .doc-item {
+    flex: 0 0 240px;
+    max-width: 240px;
+}
+
+/* Hover đồng bộ */
+.latest-doc-wrapper .doc-card:hover,
+.latest-doc-wrapper .doc-item:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 36px rgba(0,0,0,.18);
+}
+
+/* ===== MODAL WRAPPER ===== */
+#shareModal .modal-content {
+    border-radius: 16px;
+    border: none;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+/* ===== HEADER ===== */
+#shareModal .modal-header {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    border: none;
+    padding: 16px 20px;
+}
+
+#shareModal .modal-title {
+    font-weight: 600;
+    font-size: 18px;
+}
+/* ===== BODY ===== */
+#shareModal .modal-body {
+    padding: 20px;
+}
+
+/* ===== SHARE TYPE BUTTON ===== */
+.share-type-btn {
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.25s ease;
+}
+
+.share-type-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* ACTIVE BUTTON */
+.share-type-btn.active {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    border: none;
+}
+
+/* ===== INPUT ===== */
+#shareModal input {
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    transition: all 0.2s ease;
+}
+
+#shareModal input:focus {
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79,172,254,0.2);
+}
+
+/* ===== BUTTON ===== */
+#shareModal .btn-primary {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    border: none;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+#shareModal .btn-success {
+    background: linear-gradient(135deg, #00c853, #00e676);
+    border: none;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+/* ===== RESULT BOX ===== */
+#shareModal #shareResult,
+#shareModal #shareEmailResult {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px dashed #ddd;
+}
+
+/* ===== LABEL ===== */
+#shareModal label {
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+/* ===== ANIMATION ===== */
+#shareModal .modal-dialog {
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+

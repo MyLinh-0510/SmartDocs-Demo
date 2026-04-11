@@ -1,11 +1,17 @@
 package edu.uni.smartdocs.controllers.admin;
 
 import edu.uni.smartdocs.models.Category;
+import edu.uni.smartdocs.models.Contact;
+import edu.uni.smartdocs.models.Document;
 import edu.uni.smartdocs.service.CategoryService;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
 
 import java.util.Optional;
 
@@ -20,10 +26,25 @@ public class CategoryController {
     }
 
     @GetMapping("/categories/index")
-    public String listCategory(Model model) {
-        model.addAttribute("categories", categoryService.findAll());
+    public String listCategory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model
+    ) {
+
+        Page<Category> categoryPage = categoryService.findAll(
+                PageRequest.of(page, size, Sort.by("id").descending())
+        );
+
+
+        model.addAttribute("categories", categoryPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", categoryPage.getTotalPages());
+        model.addAttribute("size", size);
+
         return "admin/categories/index";
     }
+
 
     @GetMapping("/categories/create")
     public String createForm(Model model) {

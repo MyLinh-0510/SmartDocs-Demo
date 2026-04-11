@@ -88,20 +88,34 @@
         <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
         <!-- Form tạo tài khoản -->
-        <form th:action="@{/admin/users/create}" class="create-user-form" method="post">
+        <form th:action="@{/admin/users/create}" class="create-user-form" method="post" enctype="multipart/form-data">
+
+            <div class="form-group mb-3">
+                <label class="form-label">Avatar:</label>
+                <input type="file" name="avatarFile" accept="image/*" class="form-control"
+                       onchange="previewAvatar(event)">
+
+                <img th:if="${newUser.avatar != null}"
+                     th:src="@{'/uploads/avatars/' + ${newUser.avatar}}"
+                     id="avatarPreview"
+                     style="margin-top:10px;width:100px;height:100px;object-fit:cover;border-radius:50%;border:1px solid #ddd;"/>
+
+            </div>
+
+
             <div class="form-group">
                 <label for="name">Họ tên:</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" required  th:value="${newUser.name}">
             </div>
 
             <div class="form-group">
                 <label for="phone">Số điện thoại:</label>
-                <input type="text" id="phone" name="phone" required>
+                <input type="text" id="phone" name="phone" required  th:value="${newUser.phone}">
             </div>
 
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" required  th:value="${newUser.email}">
             </div>
 
             <div class="form-group">
@@ -120,11 +134,14 @@
                 </div>
             </div>
 
-            <div class="checkbox-group">
-                <label>
-                    <input type="checkbox" name="isAdmin"> Là quản trị viên (Admin)
-                </label>
+            <div class="mb-3">
+                <label class="form-label">Vai trò</label>
+                <select name="role" class="form-select" required>
+                    <option value="EMPLOYEE">Nhân viên</option>
+                    <option value="CEO">Giám đốc (CEO)</option>
+                </select>
             </div>
+
 
             <div class="back-link mt-3 text-center">
                 <a th:href="@{/admin/users/index}" class="btn btn-danger">⬅ Quay lại</a>
@@ -152,6 +169,15 @@
         });
     });
 </script>
+
+<script>
+    function previewAvatar(event) {
+        const img = document.getElementById("avatarPreview");
+        img.src = URL.createObjectURL(event.target.files[0]);
+        img.onload = () => URL.revokeObjectURL(img.src);
+    }
+</script>
+
 
 </body>
 </html>

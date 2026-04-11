@@ -1,10 +1,7 @@
 package edu.uni.smartdocs.controllers.user;
 
 import edu.uni.smartdocs.models.Contact;
-import edu.uni.smartdocs.models.ContactMessage;
-import edu.uni.smartdocs.models.MessageDTO;
 import edu.uni.smartdocs.models.User;
-import edu.uni.smartdocs.repository.ContactMessageRepository;
 import edu.uni.smartdocs.repository.ContactRepository;
 import edu.uni.smartdocs.service.ContactService;
 import edu.uni.smartdocs.service.UserService;
@@ -26,85 +23,70 @@ public class ContactUController {
     private ContactRepository contactRepo;
 
     @Autowired
-    private ContactMessageRepository messageRepo;
-
-    @Autowired
     private ContactService contactService;
 
     @Autowired
     private UserService userService;
 
-
-    // CLICK MENU → chuyển thẳng vào form
+    // ================= MENU =================
     @GetMapping
     public String defaultContact() {
-        return "redirect:/user/contactu/form";
+        return "redirect:/user/contactu/contact-page";
     }
 
-    // HIỂN THỊ FORM LIÊN HỆ
-    @GetMapping("/form")
+    // ================= FORM =================
+    @GetMapping("/contact-page")
     public String showContactForm(Model model, Principal principal) {
 
         Contact contact = new Contact();
 
         if (principal != null) {
-            // Lấy user theo email đăng nhập
-            User user = userService.findByEmail(principal.getName())
-                    .orElse(null);
+            User user = userService.findByEmail(principal.getName()).orElse(null);
 
             if (user != null) {
-                contact.setUserName(user.getFullName());
-                contact.setUserEmail(user.getEmail());
+                contact.setName(user.getFullName());
+                contact.setEmail(user.getEmail());
                 contact.setPhone(user.getPhone());
             }
         }
 
         model.addAttribute("contact", contact);
-        return "user/contactu/form";
+        return "/user/contactu/contact-page";
     }
 
-
-    // USER GỬI LIÊN HỆ (tạo Contact + Message đầu tiên)
-    @PostMapping("/form")
+    // ================= SUBMIT =================
+    @PostMapping("/contact-page")
     public String submitContact(@ModelAttribute("contact") Contact contact,
-                                @RequestParam("message") String firstMessage,
                                 RedirectAttributes redirect,
                                 Principal principal) {
+
+        if (contact.getMessage().length() > 1000) {
+            redirect.addFlashAttribute("error", "Nội dung tối đa 1000 ký tự!");
+            return "redirect:/user/contactu/contact-page";
+        }
 
         if (principal != null) {
             User user = userService.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy user!"));
 
-            contact.setUser(user);                // Gán user_id
-            contact.setUserEmail(user.getEmail());
-            contact.setUserName(user.getFullName());
+            contact.setName(user.getFullName());
+            contact.setEmail(user.getEmail());
+            contact.setPhone(user.getPhone());
         }
 
-        contact.setReplied(false);
         contact.setCreatedAt(LocalDateTime.now());
+        contact.setReplied(false);
 
-        // Lưu Contact
-        contact = contactRepo.save(contact);
+        contactRepo.save(contact);
 
-        // Lưu Message đầu tiên
-        ContactMessage msg = new ContactMessage();
-        msg.setContact(contact);
-        msg.setContent(firstMessage);
-        msg.setFromAdmin(false);
-        msg.setCreatedAt(LocalDateTime.now());
-
-        messageRepo.save(msg);
-
-        redirect.addFlashAttribute("success",
-                "Gửi liên hệ thành công! Chúng tôi sẽ phản hồi sớm nhất.");
-
-        return "redirect:/user/contactu/form";
+        redirect.addFlashAttribute("success", "Gửi liên hệ thành công!");
+        return "redirect:/user/contactu/contact-page";
     }
 
-
-    // LỊCH SỬ LIÊN HỆ
+    // ================= HISTORY =================
     @GetMapping("/history")
     public String viewHistory(Model model, Principal principal) {
+
         if (principal == null) return "redirect:/login";
 
         String email = principal.getName();
@@ -113,49 +95,4 @@ public class ContactUController {
         model.addAttribute("history", history);
         return "user/contactu/history";
     }
-
-    @GetMapping("/messages/{contactId}")
-    @ResponseBody
-    public List<ContactMessage> getMessages(@PathVariable Long contactId, Principal principal) {
-
-        Contact contact = contactRepo.findById(contactId).orElseThrow();
-
-        // Chặn người xem không phải chủ sở hữu
-        if (!contact.getUserEmail().equals(principal.getName())) {
-            throw new RuntimeException("Bạn không có quyền xem cuộc trò chuyện này!");
-        }
-
-        return messageRepo.findByContactOrderByCreatedAtAsc(contact);
-    }
-
-
-    // USER HOẶC ADMIN GỬI TIN NHẮN MỚI
-    @PostMapping("/message/send")
-    @ResponseBody
-    public String sendMessage(@RequestBody MessageDTO dto, Principal principal) {
-
-        Contact contact = contactRepo.findById(dto.getContactId())
-                .orElseThrow();
-
-        ContactMessage msg = new ContactMessage();
-        msg.setContact(contact);
-        msg.setContent(dto.getContent());
-        msg.setFromAdmin(dto.isAdmin());
-        msg.setCreatedAt(LocalDateTime.now());
-
-        messageRepo.save(msg);
-
-        // Cập nhật trạng thái đã trả lời
-        if (dto.isAdmin()) {
-            contact.setReplied(true);
-            contact.setReplyDate(LocalDateTime.now());
-        } else {
-            contact.setReplied(false);
-        }
-
-        contactRepo.save(contact);
-
-        return "ok";
-    }
-
 }

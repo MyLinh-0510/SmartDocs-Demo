@@ -8,23 +8,36 @@
 
 <aside id="sidebar" class="sidebar" th:fragment="sidebar">
   <ul>
-    <li><a th:href="@{/admin/dashboard}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
-    <li><a th:href="@{/admin/users/index}"><i class="fa-solid fa-users"></i> Quản lý người dùng</a></li>
-    <li><a th:href="@{/admin/categories/index}"><i class="fa-solid fa-list"></i> Quản lý danh mục</a></li>
-    <li><a th:href="@{/admin/accessauthor/index}"><i class="fa-solid fa-user-shield"></i> Phân quyền</a></li>
-    <li><a th:href="@{/admin/documents/index}"><i class="fa-solid fa-folder-open"></i> Quản lý tài liệu</a></li>
-    <li><a th:href="@{/admin/contact/index}"><i class="fa-solid fa-envelope-open-text"></i> Quản lý Feeback </a></li>
-    <li><a th:href="@{/admin/report}"><i class="fa-solid fa-chart-pie"></i> Báo cáo & Thống kê</a></li>
-  </ul>
+    <li>
+      <a th:href="@{/admin/dashboard}"><i class="fa-solid fa-gauge-high"></i><span> Dashboard</span></a></li>
+
+    <li><a th:href="@{/admin/users/index}"><i class="fa-solid fa-users"></i><span> Quản lý người dùng</span></a></li>
+
+    <li><a th:href="@{/admin/categories/index}"><i class="fa-solid fa-list"></i><span> Quản lý danh mục</span></a></li>
+
+    <li><a th:href="@{/admin/accessauthor/index}"><i class="fa-solid fa-user-shield"></i><span> Phân quyền</span></a></li>
+
+    <li><a th:href="@{/admin/documents/index}"><i class="fa-solid fa-folder-open"></i><span> Quản lý tài liệu</span></a></li>
+
+    <li><a th:href="@{/admin/document-approvals/index}"><i class="fa-solid fa-file-signature"></i><span> Tài liệu trình ký</span></a></li>
+
+    <li><a th:href="@{/admin/contact/index}"><i class="fa-solid fa-envelope-open-text"></i><span> Quản lý liên hệ</span></a></li>
+
+    <li><a th:href="@{/admin/dashboard}"><i class="fa-solid fa-chart-pie"></i><span> Báo cáo & Thống kê</span></a></li></ul>
+
+  <!-- NÚT ẨN / HIỆN SIDEBAR (CHỈ THÊM NÚT) -->
+  <button class="sidebar-toggle" onclick="toggleSidebar()">
+    <i class="fa-solid fa-angle-left"></i>
+  </button>
 </aside>
-
-
 
 <script>
   function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.body.classList.toggle('sidebar-collapsed');
   }
 </script>
+
+
 
 </body>
 </html>

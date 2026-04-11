@@ -3,6 +3,8 @@ package edu.uni.smartdocs.service;
 import edu.uni.smartdocs.models.Category;
 import edu.uni.smartdocs.models.Document;
 import edu.uni.smartdocs.repository.CategoryRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,4 +34,9 @@ public class CategoryService {
     public Optional<Category> findById(Long id) {
         return repo.findById(id);
     }
+
+    public Page<Category> findAll(Pageable pageable) {
+        return repo.findAll(pageable);
+    }
+
 }

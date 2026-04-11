@@ -1,11 +1,9 @@
 package edu.uni.smartdocs.controllers.user;
 
-import edu.uni.smartdocs.models.Category;
 import edu.uni.smartdocs.models.Document;
+import edu.uni.smartdocs.dto.DocumentSearchDTO;
 import edu.uni.smartdocs.models.User;
-import edu.uni.smartdocs.service.CategoryService;
-import edu.uni.smartdocs.service.DocumentService;
-import edu.uni.smartdocs.service.UserService;
+import edu.uni.smartdocs.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,9 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
-
 
 @Controller
 @RequestMapping("/user")
@@ -26,8 +22,9 @@ public class SiteController {
     private final DocumentService documentService;
     private final UserService userService;
     private final CategoryService categoryService;
+    private final ContactService contactService;
+    private final NotificationService notificationService;
 
-    // Thêm currentPath để active menu
     @ModelAttribute("currentPath")
     public String currentPath(HttpServletRequest request) {
         return request.getRequestURI();
@@ -35,72 +32,77 @@ public class SiteController {
 
     @ModelAttribute
     public void addCategoriesToAllPages(Model model) {
-        List<Category> categories = categoryService.findAll();
-        model.addAttribute("allCategories", categories);
+        model.addAttribute("allCategories", categoryService.findAll());
     }
 
-    //TRANG CHỦ
-    @GetMapping("/home")
+    // home
+    @GetMapping("/home-page")
     @PreAuthorize("hasAnyRole('EMPLOYEE','CEO')")
-    public String home(Model model) {
+    public String homepage(Model model) {
+
         List<Document> docs = documentService.findVisibleDocuments();
-        if (docs == null) docs = new ArrayList<>();
+
         model.addAttribute("latestDocs", docs);
         model.addAttribute("totalDocs", docs.size());
         model.addAttribute("totalUsers", userService.countUsers());
-        return "user/home";
+        model.addAttribute("totalContacts", contactService.count());
+
+        return "/user/home-page";
     }
 
-    //TRANG TÌM KIẾM
-    @GetMapping("/search")
+    // search
+    @GetMapping("/documentsu/document-page")
     @PreAuthorize("hasAnyRole('EMPLOYEE','CEO')")
-    public String search(@RequestParam(required = false) String keyword, Model model) {
-        List<Document> docs = (keyword == null || keyword.isBlank())
-                ? documentService.findVisibleDocuments()
-                : documentService.findByKeyword(keyword);
-
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("results", docs);
-        return "user/search";
-    }
-
-    // 📄 CHI TIẾT TÀI LIỆU
-    @GetMapping("/detail/{id}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','CEO')")
-    public String detail(@PathVariable Long id, Model model) {
-        Document document = documentService.findById(id).orElse(null);
-        model.addAttribute("document", document);
-        return "user/documentsu/detail";
-    }
-
-    //Trang tài liệu
-    @GetMapping("/documents-user")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','CEO')")
-    public String myDocuments(Principal principal, Model model) {
+    public String documentsUser(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
+            Principal principal,
+            Model model
+    ) {
         if (principal == null) {
             return "redirect:/admin/account/login";
         }
 
-        User currentUser = userService.findByEmail(principal.getName()).orElse(null);
-        if (currentUser == null) {
-            return "redirect:/site/home";
+        User user = userService.findByEmail(principal.getName()).orElse(null);
+        if (user == null) {
+            return "redirect:/user/home-page";
         }
 
-        User.Role userRole = currentUser.getRole();
+        List<DocumentSearchDTO> documents =
+                documentService.searchDocuments(keyword, categoryId, user);
 
-        List<Document> allVisibleDocs = documentService.findVisibleDocuments();
+        model.addAttribute("documents", documents);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("categoryId", categoryId);
 
-        List<Document> myDocs = allVisibleDocs.stream()
-                .filter(doc -> doc.getVisibleToRoles() != null && doc.getVisibleToRoles().contains(userRole))
-                .sorted((d1, d2) -> d2.getCreatedAt().compareTo(d1.getCreatedAt()))
-                .toList();
-
-        model.addAttribute("documents", myDocs);
-        model.addAttribute("pageTitle", "Tài liệu của tôi");
-        model.addAttribute("totalMyDocs", myDocs.size()); // thêm để debug
-
-        return "user/documentsu/documents-user";
+        return "/user/documentsu/document-page";
     }
 
+    @GetMapping("/notifications")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','CEO')")
+    public String notifications(
+            Principal principal,
+            Model model
+    ) {
+        if (principal == null) {
+            return "redirect:/admin/account/login";
+        }
+
+        User user = userService.findByEmail(principal.getName()).orElse(null);
+        if (user == null) {
+            return "redirect:/user/home-page";
+        }
+
+        model.addAttribute(
+                "notifications",
+                notificationService.getMyNotifications(user)
+        );
+        model.addAttribute("pageTitle", "Thông báo");
+
+        // vào trang là mark all read
+        notificationService.markAllAsRead(user);
+
+        return "user/notifications";
+    }
 
 }

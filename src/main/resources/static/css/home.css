@@ -1,0 +1,689 @@
+/* FIX HEADER – KHÔNG BỊ MẤT KHI SCROLL */
+.navbar-custom {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 99999;
+    background-color: #2c3e50;
+}
+
+/* Chừa chỗ cho header, tránh bị nội dung đè */
+body {
+    padding-top: 72px;
+}
+
+
+/* ====== HERO ====== */
+.hero-smartdocs {
+    background: url("/images/homepage.jpg") no-repeat center;
+    background-size: cover;
+    min-height: 85vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+
+.hero-smartdocs .overlay {
+    width: 70%;
+    padding: 80px 0;
+    margin-left: 30px;
+    border: 1px solid #b1b0b0;
+
+    border-radius: 16px;
+    box-shadow:
+            0 10px 25px rgba(0, 0, 0, 0.35),
+            0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+
+.hero-title {
+    font-size: 2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1.3;
+}
+
+.hero-desc {
+    font-size: 1.1rem;
+    color: #040303;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ===== HERO BUTTONS ===== */
+.hero-btn {
+    min-width: 220px;
+    height: 52px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    font-size: 1rem;
+    font-weight: 600;
+
+    border-radius: 12px;
+}
+
+/* Nút chính */
+.hero-btn-primary {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+.hero-btn-primary:hover {
+    background-color: #0b5ed7;
+}
+
+/* Nút phụ */
+.hero-btn-secondary {
+    background-color: #fcba03;
+    color: #fff;
+}
+
+.hero-btn-secondary:hover {
+    background-color: #f4d406;
+}
+
+
+/* ====== CARD & SCROLL ====== */
+.scroll-wrapper { position: relative; }
+.scroll-btn {
+    position: absolute;
+    top: 40%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: #fff;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: 0.2s;
+}
+.scroll-btn:hover { background: #007bff; color: white; }
+.scroll-left { left: -20px; }
+.scroll-right { right: -20px; }
+
+.horizontal-scroll {
+    display: flex;
+    gap: 24px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding: 20px 0;
+    scrollbar-width: thin;
+}
+.horizontal-scroll::-webkit-scrollbar { height: 8px; }
+.horizontal-scroll::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 10px;
+}
+
+.category-item { flex: 0 0 260px; scroll-snap-align: start; }
+.category-card, .card-inner {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+.category-card:hover, .card-inner:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.18);
+}
+
+.doc-card { flex: 0 0 320px; scroll-snap-align: start; }
+
+/* ====== THỐNG KÊ ====== */
+.stats-section { background: #f8f9fa; padding: 70px 0; }
+.stat-box {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: transform 0.3s;
+}
+.stat-box:hover { transform: translateY(-5px); }
+
+@media (max-width: 768px) {
+    .doc-card { flex: 0 0 85%; }
+    .hero h1 { font-size: 2.2rem; }
+}
+/* ====== LỢI ÍCH NỔI BẬT ====== */
+.benefits-section {
+    position: relative;
+    background: url("/images/benefits-3.jpg") center/cover no-repeat;
+    padding: 90px 0;
+}
+
+.benefits-overlay {
+    border-radius: 20px;
+    padding: 60px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+}
+
+.benefits-title {
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.benefit-item {
+    display: flex;
+    gap: 18px;
+    margin-bottom: 28px;
+    padding: 18px 20px;
+    border-radius: 14px;
+    transition: 0.3s;
+}
+
+.benefit-item:hover {
+    background: #f4f8ff;
+    transform: translateX(6px);
+}
+
+.benefit-icon {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d6efd, #4dabf7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    box-shadow: 0 8px 20px rgba(13,110,253,0.35);
+}
+
+.benefit-content h5 {
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.benefit-content p {
+    margin: 0;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.benefits-image img {
+    max-width: 100%;
+    animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+
+@media (max-width: 768px) {
+    .benefits-overlay {
+        padding: 40px 24px;
+    }
+}
+
+/* ===== DANH MỤC NỔI BẬT – NÂNG CẤP ===== */
+.featured-category-section {
+    position: relative;
+    background: url("/images/danhmuc-noibat.jpg") center/cover no-repeat;
+    padding: 90px 0;
+}
+
+.featured-category-wrapper {
+    border-radius: 22px;
+    padding: 50px 40px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.12);
+}
+
+.featured-category-title {
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* scroll */
+.featured-scroll {
+    display: flex;
+    gap: 28px;
+    overflow-x: auto;
+    padding: 30px 10px 40px;
+    scroll-snap-type: x mandatory;
+}
+
+.featured-scroll::-webkit-scrollbar {
+    height: 10px;
+}
+
+.featured-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #0d6efd, #ffc107);
+    border-radius: 10px;
+}
+
+/* item */
+.featured-item {
+    flex: 0 0 280px;
+    scroll-snap-align: start;
+}
+
+/* card */
+.featured-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 34px 26px;
+    text-align: center;
+    height: 100%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transition: 0.35s ease;
+}
+
+.featured-card:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+}
+
+/* icon */
+.featured-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d6efd, #4dabf7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2rem;
+    box-shadow: 0 12px 25px rgba(13,110,253,0.4);
+}
+
+/* text */
+.featured-card h5 {
+    margin-top: 18px;
+    font-weight: 700;
+}
+
+.featured-card p {
+    font-size: 0.95rem;
+    color: #666;
+}
+
+/* nút scroll */
+.featured-scroll-btn {
+    position: absolute;
+    top: 55%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    transition: 0.25s;
+}
+
+.featured-scroll-btn:hover {
+    background: #0d6efd;
+    color: #fff;
+}
+
+.featured-scroll-left { left: -24px; }
+.featured-scroll-right { right: -24px; }
+
+@media (max-width: 768px) {
+    .featured-category-wrapper {
+        padding: 40px 24px;
+    }
+    .featured-item {
+        flex: 0 0 85%;
+    }
+}
+
+/* ===== GIỚI THIỆU ===== */
+.intro-section {
+    position: relative;
+    background: url("/images/gioithieu.jpg") center/cover no-repeat;
+    padding: 90px 0;
+}
+
+.intro-box {
+    border-radius: 24px;
+    padding: 60px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.12);
+}
+
+.intro-list li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+    font-size: 1.05rem;
+}
+
+.intro-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #198754, #6fdd9a);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ================= THỐNG KÊ – BIỂU ĐỒ CỘT ================= */
+.stats-section {
+    position: relative;
+    background: url("/images/thongke.jpg") center/cover no-repeat;
+    padding: 100px 0;
+}
+
+/* Overlay nhẹ để chữ nổi bật hơn */
+.stats-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(2px);
+}
+
+.stats-section > .container {
+    position: relative;
+    z-index: 2;
+}
+
+/* Card thống kê */
+.stat-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 40px 20px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s ease;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: linear-gradient(90deg, #0d6efd, #ffc107);
+}
+
+.stat-card:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.18);
+}
+
+/* Icon */
+.stat-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d6efd, #4dabf7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 2.2rem;
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.35);
+}
+
+/* Số đếm động */
+.stat-number {
+    font-size: 3.2rem;
+    font-weight: 900;
+    color: #0d6efd;
+    margin: 16px 0 8px;
+    line-height: 1;
+}
+
+/* Nhãn */
+.stat-label {
+    font-size: 1.1rem;
+    color: #555;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Thanh progress nhỏ dưới cùng */
+.stat-progress {
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.stat-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #0d6efd, #ffc107);
+    border-radius: 10px;
+    transition: width 1.8s ease;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .stat-number {
+        font-size: 2.8rem;
+    }
+    .stat-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-section {
+        padding: 80px 0;
+    }
+    .stat-card {
+        padding: 32px 16px;
+    }
+    .stat-number {
+        font-size: 2.5rem;
+    }
+}
+
+/* ===== TÀI LIỆU MỚI NHẤT – GOOGLE DRIVE STYLE ===== */
+.latest-docs-section {
+    position: relative;
+    background: url("/images/doc-new.jpg") center/cover no-repeat;
+    padding: 100px 0;
+}
+
+.latest-docs-wrapper {
+    border-radius: 26px;
+    padding: 60px 50px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.15);
+}
+
+/* Scroll */
+.latest-docs-scroll {
+    display: flex;
+    gap: 28px;
+    overflow-x: auto;
+    padding: 20px 0 40px;
+    scroll-snap-type: x mandatory;
+}
+.latest-docs-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* Item */
+.latest-docs-scroll > div {
+    flex: 0 0 240px;
+    scroll-snap-align: start;
+}
+
+/* Card */
+.latest-doc-card {
+    height: 420px;
+    background: #fff;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    transition: 0.3s;
+}
+
+.latest-doc-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 22px 50px rgba(0,0,0,0.2);
+}
+
+/* ================= QUAN TRỌNG NHẤT ================= */
+/* PREVIEW PDF – GIỐNG GOOGLE DRIVE */
+/* ===== GOOGLE DRIVE PDF PAGE FRAME ===== */
+.pdf-page-frame {
+    width: 88%;
+    height: 92%;
+    background: #fff;
+    border-radius: 6px;
+
+    /* viền + bóng giống trang giấy */
+    border: 1px solid #e0e0e0;
+    box-shadow:
+            0 1px 3px rgba(0,0,0,0.08),
+            0 4px 12px rgba(0,0,0,0.08);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px;
+}
+
+/* ẢNH PDF */
+.doc-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;   /* QUAN TRỌNG */
+    background: #fff;
+}
+
+.doc-preview-wrapper {
+    height: 260px;
+    background: #f1f3f5;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 18px 18px 0 0;
+    position: relative;
+}
+
+/* ẢNH PDF */
+.doc-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;   /* 🔥 GIỐNG GOOGLE DRIVE */
+    background: #f1f3f5;
+}
+
+/* FALLBACK */
+.doc-preview-fallback {
+    position: absolute;
+    inset: 0;
+    background: #0d6efd;
+    color: #fff;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* BODY */
+.latest-doc-card .card-body {
+    padding: 14px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.latest-doc-card h6 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 10px;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* BUTTON */
+.latest-doc-card .btn {
+    margin-top: auto;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.latest-doc-card .card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.doc-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.doc-actions .btn {
+    flex: 1;
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 6px 8px;
+    font-size: 0.9rem;
+}
+
+/* Scroll buttons */
+.featured-scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.featured-scroll-btn:hover {
+    background: #0d6efd;
+    color: #fff;
+}
+
+.featured-scroll-left { left: -24px; }
+.featured-scroll-right { right: -24px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .latest-docs-scroll > div {
+        flex: 0 0 85%;
+    }
+}

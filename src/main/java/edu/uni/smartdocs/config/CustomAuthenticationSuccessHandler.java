@@ -9,7 +9,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-
 @Component
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
@@ -18,25 +17,22 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             HttpServletRequest request,
             HttpServletResponse response,
             Authentication authentication
-    ) throws IOException, ServletException {
+    ) throws IOException {
 
-        String redirectUrl = null;
+        String redirectUrl = "/account/login?error=role";
 
-        // ✅ Duyệt qua các quyền (role) của người dùng
         for (GrantedAuthority authority : authentication.getAuthorities()) {
             String role = authority.getAuthority();
 
-            if (role.equals("ROLE_ADMIN")) {
+            if ("ROLE_ADMIN".equals(role)) {
                 redirectUrl = "/admin/dashboard";
                 break;
-            } else if (role.equals("ROLE_CEO") || role.equals("ROLE_EMPLOYEE")) {
-                redirectUrl = "/user/home";
+            }
+
+            if ("ROLE_EMPLOYEE".equals(role) || "ROLE_CEO".equals(role)) {
+                redirectUrl = "/user/home-page";
                 break;
             }
-        }
-
-        if (redirectUrl == null) {
-            redirectUrl = "/admin/account/login?error=role"; // fallback nếu không có role hợp lệ
         }
 
         response.sendRedirect(redirectUrl);

@@ -37,6 +37,22 @@
       border: 1px solid #e5e7eb;
       padding: 12px 16px;
       border-radius: 8px;
+      white-space: pre-line;
+      word-wrap: break-word;
+    }
+
+    .content-contact{
+      background: #ffffff;
+      border: 1px solid #dce1e6;
+      padding: 16px;
+      border-radius: 10px;
+      white-space: pre-line;
+      line-height: 1.6;
+      min-height: 120px;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      max-width: 100%;
     }
   </style>
 </head>
@@ -59,7 +75,7 @@
 
       <div class="mb-3">
         <label class="fw-bold">Người gửi:</label>
-        <div class="readonly-box" th:text="${contact.userName}"></div>
+        <div class="readonly-box" th:text="${contact.name}"></div>
       </div>
 
       <div class="mb-3">
@@ -69,12 +85,12 @@
 
       <div class="mb-3">
         <label class="fw-bold">Email:</label>
-        <div class="readonly-box" th:text="${contact.userEmail}"></div>
+        <div class="readonly-box" th:text="${contact.email}"></div>
       </div>
 
       <div class="mb-3">
         <label class="fw-bold">Nội dung liên hệ:</label>
-        <div class="readonly-box" th:text="${contact.message}"></div>
+        <div class="content-contact" th:text="${contact.message}"></div>
       </div>
 
       <!-- FORM TRẢ LỜI -->
@@ -83,14 +99,19 @@
 
         <div class="mb-3">
           <label class="fw-bold">Trả lời:</label>
-          <textarea class="form-control" name="adminReply" rows="5"
-                    th:text="${contact.adminReply != null ? contact.adminReply : ''}"
-                    placeholder="Nhập nội dung trả lời..." required></textarea>
+          <textarea class="form-control"
+                    name="adminReply"
+                    rows="5"
+                    maxlength="1000"
+                    required
+                    placeholder="Nhập nội dung trả lời..."></textarea>
+
+          <small class="text-muted">Tối đa 1000 ký tự</small>
         </div>
 
         <div class="text-center mt-3">
-          <a th:href="@{/admin/contact/index}" class="btn btn-danger">⬅ Quay lại danh sách</a>
-          <button type="submit" class="btn btn-primary w-30">📨 Gửi trả lời</button>
+          <a th:href="@{/admin/contact/index}" class="btn btn-danger">⬅ Quay lại</a>
+          <button type="submit" class="btn btn-update w-30">📑 Cập nhật</button>
         </div>
 
       </form>

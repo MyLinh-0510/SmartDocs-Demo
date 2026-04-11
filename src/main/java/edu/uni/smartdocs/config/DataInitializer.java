@@ -25,13 +25,13 @@ public class DataInitializer {
                 User admin = new User();
                 admin.setName("Admin");
                 admin.setEmail(adminEmail);
-                admin.setPassword(passwordEncoder.encode("123456")); // ✅ mã hóa
+                admin.setPassword(passwordEncoder.encode("123456"));
                 admin.setRole(Role.ADMIN);
-                admin.setAdmin(true); // ✅ nếu bạn dùng user.isAdmin() để phân quyền
+                admin.setAdmin(true);
                 userRepository.save(admin);
-                System.out.println("✅ Tài khoản admin mặc định đã được tạo: " + adminEmail);
+                System.out.println("Tài khoản admin mặc định đã được tạo: " + adminEmail);
             } else {
-                System.out.println("✅ Tài khoản admin đã tồn tại: " + adminEmail);
+                System.out.println("Tài khoản admin đã tồn tại: " + adminEmail);
             }
 
             // ---------- Tạo employee mặc định ----------
@@ -40,13 +40,13 @@ public class DataInitializer {
                 User employee = new User();
                 employee.setName("Employee");
                 employee.setEmail(employeeEmail);
-                employee.setPassword(passwordEncoder.encode("123456")); // ✅ mã hóa
+                employee.setPassword(passwordEncoder.encode("123456"));
                 employee.setRole(Role.EMPLOYEE);
-                employee.setAdmin(false); // ✅ rõ ràng hơn
+                employee.setAdmin(false);
                 userRepository.save(employee);
-                System.out.println("✅ Tài khoản nhân viên mặc định đã được tạo: " + employeeEmail);
+                System.out.println("Tài khoản nhân viên mặc định đã được tạo: " + employeeEmail);
             } else {
-                System.out.println("✅ Tài khoản nhân viên đã tồn tại: " + employeeEmail);
+                System.out.println("Tài khoản nhân viên đã tồn tại: " + employeeEmail);
             }
         };
     }

@@ -1,8 +1,6 @@
 package edu.uni.smartdocs.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,70 +14,132 @@ import java.util.Set;
 @Table(name = "documents")
 public class Document {
 
+    /* BASIC INFO */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Tiêu đề tài liệu
     @Column(nullable = false)
     private String title;
 
-    // Mô tả tài liệu
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // Đường dẫn lưu file trên server
+    /* FILE INFO */
     private String filePath;
-
-    // Tên file khi lưu trong server
     private String filename;
-
-    // MIME type (vd: application/pdf)
     private String mimeType;
-
-    // Kích thước file (bytes)
     private Long size;
 
-    // Metadata bổ sung (nếu có)
     @Column(columnDefinition = "TEXT")
     private String meta;
 
-    // Trạng thái hiển thị
+    /* PDF PREVIEW */
+    private String pdfFilename;
+    private String pdfPath;
+
+    /* VISIBILITY */
     @Column(name = "is_visible", nullable = false)
-    private Boolean isVisible = true;
+    private boolean isVisible = true;
 
-    // Thời điểm tạo
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    // Liên kết đến loại file
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "file_type_id")
-    private FileType fileType;
-
-    // Liên kết đến danh mục
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category_id")
-    private Category category;
-
-    // Vai trò được phép xem tài liệu này
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(
             name = "document_visible_roles",
-            joinColumns = @JoinColumn(name = "document_id"))
+            joinColumns = @JoinColumn(name = "document_id")
+    )
     @Column(name = "role")
     private Set<User.Role> visibleToRoles = new HashSet<>();
 
+    /* CATEGORY & FILE TYPE */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "file_type_id")
+    private FileType fileType;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    /* TIME */
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "submitted_at")
+    private LocalDateTime submittedAt;
+
+    private LocalDateTime approvedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    /* USER */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private User createdBy;
+
+    @Column(name = "so_vb")
+    private String soVB;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private DocumentStatus status = DocumentStatus.DRAFT;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approver_id")
+    private User approver;
+
+    @Column(columnDefinition = "TEXT")
+    private String approvalNote;
+
+    /* SOFT DELETE */
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    /* USER ACTIONS */
     @OneToMany(mappedBy = "document")
+    @JsonIgnore
     private List<UserDocumentAction> actions;
 
-    private String pdfFilename;
+    /* VERSIONING */
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL)
+    private List<DocumentVersion> versions;
 
-    private String pdfPath;
+    /* ==================== LIÊN KẾT AI ==================== */
 
+    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private DocumentSummary documentSummary;
 
-    // ===== CONSTRUCTOR =====
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<DocumentChunk> chunks;
+
+    @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private SemanticData semanticData;
+
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<AiRecommendation> aiRecommendations;
+
+    /* ==================== CONSTRUCTOR & HELPER ==================== */
     public Document() {}
 
+    // Helper methods
+    public boolean hasSummary() {
+        return documentSummary != null && documentSummary.getSummaryText() != null;
+    }
+
+    public boolean hasChunks() {
+        return chunks != null && !chunks.isEmpty();
+    }
+
+    public boolean hasSemanticData() {
+        return semanticData != null && semanticData.getEmbedding() != null;
+    }
+
+    public boolean hasAiRecommendations() {
+        return aiRecommendations != null && !aiRecommendations.isEmpty();
+    }
 }

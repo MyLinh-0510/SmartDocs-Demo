@@ -12,156 +12,122 @@
     <link th:href="@{/css/table_button.css}" rel="stylesheet">
 
     <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f4f6f8;
-        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; }
+        #wrapper { display: flex; min-height: 100vh; }
+        .main-content { flex: 1; padding: 30px; background-color: #fff; }
+        .main-content h2 { text-align: center; margin-bottom: 30px; font-weight: 600; }
 
-        #wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
+        .table-wrapper { margin-top: 20px; }
 
-        .main-content {
-            flex: 1;
-            padding: 30px;
-            background-color: #fff;
-        }
+        .pagination { margin: 0; font-size: 14px; }
+        .pagination .page-link { padding: 6px 12px; border-radius: 6px; }
 
-        .main-content h1 {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .table-wrapper {
-            margin-top: 20px;
-        }
-
-        .status-replied {
-            color: green;
-            font-weight: bold;
-        }
-
-        .status-pending {
-            color: red;
-            font-weight: bold;
-        }
-
-        /* ================= CHAT POPUP (Messenger Style) ================= */
-
-        .chat-popup {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 380px;
-            height: 520px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
-            display: none;
-            flex-direction: column;
+        .reply-preview {
+            max-width: 220px;
             overflow: hidden;
-            z-index: 999999;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .chat-header-popup {
-            background: #0d6efd;
-            color: white;
-            padding: 14px;
+        .action-buttons {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-        }
-
-        .chat-body-popup {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            background: #f0f2f5;
-        }
-
-        .chat-input-popup {
-            padding: 12px;
-            display: flex;
-            border-top: 1px solid #ddd;
-            background: white;
-        }
-
-        .chat-input-popup input {
-            flex: 1;
-            border-radius: 20px;
-            padding: 8px 14px;
-            border: 1px solid #ccc;
-        }
-
-        .chat-input-popup button {
-            margin-left: 10px;
-            padding: 8px 18px;
-            border: none;
-            border-radius: 20px;
-            background: #0d6efd;
-            color: white;
-            font-weight: 600;
-        }
-
-        .message-row {
-            display: flex;
-            margin-bottom: 12px;
-        }
-
-        .message-user { justify-content: flex-start; }
-        .message-admin { justify-content: flex-end; }
-
-        .user-bubble {
-            background: #e4e6eb;
-            padding: 10px 14px;
-            border-radius: 16px;
-            border-bottom-left-radius: 0;
-            max-width: 75%;
-        }
-
-        .admin-bubble {
-            background: #0d6efd;
-            color: white;
-            padding: 10px 14px;
-            border-radius: 16px;
-            border-bottom-right-radius: 0;
-            max-width: 75%;
-        }
-
-        .msg-time {
-            font-size: 11px;
-            margin-top: 4px;
-            opacity: .7;
+            gap: 8px;
         }
     </style>
 </head>
 
 <body>
 
-<!-- Navbar -->
 <div th:insert="~{fragments/navbar :: navbar}"></div>
 
 <div id="wrapper">
-
-    <!-- Sidebar -->
     <div th:insert="~{fragments/sidebar :: sidebar}"></div>
 
-    <!-- Main Content -->
     <div class="main-content">
 
-        <h1>Danh sách liên hệ</h1>
+        <h2>Danh sách liên hệ</h2>
 
+        <!-- FILTER -->
+        <form class="row g-2 mb-3" method="get" th:action="@{/admin/contact/index}">
+
+            <div class="col-md-3">
+                <label class="form-label small">Từ ngày</label>
+                <input type="date" class="form-control" name="fromDate" th:value="${fromDate}">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small">Đến ngày</label>
+                <input type="date" class="form-control" name="toDate" th:value="${toDate}">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small">Trạng thái</label>
+                <select class="form-select" name="replied">
+                    <option value="">-- Tất cả --</option>
+                    <option value="true" th:selected="${replied == true}">Đã trả lời</option>
+                    <option value="false" th:selected="${replied == false}">Chưa trả lời</option>
+                </select>
+            </div>
+
+            <div class="col-12 text-center mt-2">
+                <button type="submit" class="btn btn-primary">🔍 Lọc</button>
+                <a th:href="@{/admin/contact/index}" class="btn btn-secondary">❌ Xóa</a>
+            </div>
+
+        </form>
+
+        <!-- Phân trang  -->
+        <div class="d-flex justify-content-end mb-3"
+             th:if="${contacts.totalPages > 1}">
+            <nav>
+                <ul class="pagination pagination-sm">
+
+                    <!-- Previous -->
+                    <li class="page-item"
+                        th:classappend="${contacts.number == 0} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/admin/contact/index(
+                            page=${contacts.number - 1},
+                            size=${contacts.size}
+                       )}">«</a>
+                    </li>
+
+                    <!-- Page numbers -->
+                    <li class="page-item"
+                        th:each="i : ${#numbers.sequence(0, contacts.totalPages - 1)}"
+                        th:classappend="${i == contacts.number} ? 'active'">
+                        <a class="page-link"
+                           th:text="${i + 1}"
+                           th:href="@{/admin/contact/index(
+                            page=${i},
+                            size=${contacts.size}
+                       )}"></a>
+                    </li>
+
+                    <!-- Next -->
+                    <li class="page-item"
+                        th:classappend="${contacts.number + 1 == contacts.totalPages} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/admin/contact/index(
+                            page=${contacts.number + 1},
+                            size=${contacts.size}
+                       )}">»</a>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+
+        <!-- TABLE -->
         <div class="table-wrapper">
             <table class="table table-bordered table-striped">
+
                 <thead>
                 <tr>
                     <th>ID</th>
                     <th>Người gửi</th>
-                    <th>Email</th>
                     <th>Nội dung</th>
+                    <th>Trả lời admin</th>
                     <th>Ngày nhận</th>
                     <th>Trạng thái</th>
                     <th>Hành động</th>
@@ -169,130 +135,56 @@
                 </thead>
 
                 <tbody>
-                <tr th:each="c : ${contacts}">
+
+                <tr th:each="c : ${contacts.content}">
                     <td th:text="${c.id}"></td>
-                    <td th:text="${c.userName}"></td>
-                    <td th:text="${c.userEmail}"></td>
-                    <td th:text="${c.message}"></td>
-                    <td th:text="${c.createdAt}"></td>
+
+                    <td th:text="${c.name}"></td>
+
+                    <td th:text="${c.message != null && c.message.length() > 50
+                        ? c.message.substring(0,50) + '...'
+                        : c.message}"></td>
 
                     <td>
-                        <span th:if="${c.replied}" class="status-replied">Đã trả lời</span>
-                        <span th:if="${!c.replied}" class="status-pending">Chưa trả lời</span>
+                        <span class="reply-preview"
+                              th:text="${c.adminReply != null
+                                ? (c.adminReply.length() > 40 ? c.adminReply.substring(0,40) + '...' : c.adminReply)
+                                : '—'}">
+                        </span>
                     </td>
 
+                    <td th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+
                     <td>
-                        <a th:href="@{'/admin/contact/detail/' + ${c.id}}" class="btn btn-view">👁️ Xem</a>
+                        <span th:if="${c.replied}" class="badge bg-success">Đã trả lời</span>
+                        <span th:if="${!c.replied}" class="badge bg-warning text-dark">Chưa trả lời</span>
+                    </td>
 
-                        <a href="javascript:void(0)"
-                           th:attr="onclick=|openAdminChat(${c.id}, '${c.userName}')|"
-                           class="btn btn-warning" style="margin-left:5px;">
-                            💬 Chat
-                        </a>
-
-
+                    <td class="action-buttons">
+                        <a th:href="@{'/admin/contact/detail/' + ${c.id}}"
+                           class="btn btn-sm btn-primary">👁️ Xem</a>
                     </td>
                 </tr>
+
+                <tr th:if="${#lists.isEmpty(contacts.content)}">
+                    <td colspan="7" class="text-center text-muted py-4">
+                        📭 Không có dữ liệu
+                    </td>
+                </tr>
+
                 </tbody>
+
             </table>
         </div>
 
-        <div class="back-link mt-3 text-center">
-            <a th:href="@{/admin/dashboard}" class="btn btn-danger">⬅ Quay lại Dashboard</a>
+        <div class="text-center mt-4">
+            <a th:href="@{/admin/dashboard}" class="btn btn-danger">
+                ⬅ Quay lại Dashboard
+            </a>
         </div>
 
     </div>
 </div>
-
-
-<!-- ================= CHAT POPUP ================= -->
-
-<div id="chatAdminPopup" class="chat-popup">
-
-    <div class="chat-header-popup">
-        <span id="chatWithName">💬 Chat với <strong>Người dùng</strong></span>
-        <button class="btn-close" onclick="closeAdminChat()"></button>
-    </div>
-
-
-    <div id="chatAdminBody" class="chat-body-popup">
-        <div id="chatAdminMessages"></div>
-    </div>
-
-    <div class="chat-input-popup">
-        <input id="chatAdminInput" type="text" placeholder="Nhập tin nhắn...">
-        <button id="chatAdminSend">Gửi</button>
-    </div>
-
-</div>
-
-<script>
-
-    function openAdminChat(contactId, userName) {
-
-        window.currentContactId = contactId;
-
-        // Set tên user lên popup
-        document.getElementById("chatWithName").innerHTML =
-            `💬 Chat với <strong>${userName}</strong>`;
-
-        document.getElementById("chatAdminPopup").style.display = "flex";
-
-        const box = document.getElementById("chatAdminMessages");
-        box.innerHTML = `<div class="text-center text-muted">Đang tải...</div>`;
-
-        fetch("/admin/contact/messages/" + contactId)
-            .then(res => res.json())
-            .then(messages => {
-                box.innerHTML = "";
-
-                messages.forEach(m => {
-                    box.innerHTML += `
-                <div class="message-row ${m.fromAdmin ? 'message-admin' : 'message-user'}">
-                    <div class="${m.fromAdmin ? 'admin-bubble' : 'user-bubble'}">
-                        ${m.content}
-                        <div class="msg-time">${m.createdAt.replace('T',' ')}</div>
-                    </div>
-                </div>`;
-                });
-
-                box.scrollTop = box.scrollHeight;
-            });
-    }
-
-
-    function closeAdminChat() {
-        document.getElementById("chatAdminPopup").style.display = "none";
-    }
-
-    document.getElementById("chatAdminSend").onclick = sendAdminMessage;
-
-    function sendAdminMessage() {
-        const input = document.getElementById("chatAdminInput");
-        const content = input.value.trim();
-        if (!content) return;
-
-        input.value = "";
-
-        const box = document.getElementById("chatAdminMessages");
-        box.innerHTML += `
-            <div class="message-row message-admin">
-                <div class="admin-bubble">${content}</div>
-            </div>`;
-        box.scrollTop = box.scrollHeight;
-
-        fetch("/admin/contact/message/send", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                contactId: window.currentContactId,
-                content: content,
-                admin: true
-            })
-        });
-    }
-
-</script>
 
 </body>
 </html>

@@ -1,21 +1,31 @@
 package edu.uni.smartdocs.service;
 
-import edu.uni.smartdocs.models.Category;
-import edu.uni.smartdocs.models.Document;
-import edu.uni.smartdocs.models.FileType;
-import edu.uni.smartdocs.models.User;
-import edu.uni.smartdocs.repository.CategoryRepository;
-import edu.uni.smartdocs.repository.DocumentRepository;
-import edu.uni.smartdocs.repository.FileTypeRepository;
+import edu.uni.smartdocs.dto.DocumentSearchDTO;
+import edu.uni.smartdocs.models.*;
+import edu.uni.smartdocs.repository.*;
+import edu.uni.smartdocs.security.CustomUserDetails;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.*;
 import java.text.Normalizer;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -26,41 +36,72 @@ public class DocumentService {
     private final FileTypeRepository fileTypeRepository;
     private final CategoryRepository categoryRepository;
     private final FileConvertService fileConvertService;
+    private final UserDocumentActionRepository actionRepo;
+    private final PdfPreviewService pdfPreviewService;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
+    private final LogDownloadService downloadService;
 
     private static final String UPLOAD_DIR = "uploads/original/";
-
     private static final String PDF_DIR = "uploads/pdf/";
 
-    // ================== LẤY DANH SÁCH ==================
-    public List<Document> findAll() {
-        return documentRepository.findAll();
+    /* 10 tài liệu mới nhất */
+    public List<Document> getLatestDocuments(User.Role role) {
+        return documentRepository.findTop10ForUser(role, PageRequest.of(0, 10));
     }
 
-    public long count() {
-        return documentRepository.count();
-    }
-
+    /*BASIC*/
     public Optional<Document> findById(Long id) {
         return documentRepository.findById(id);
-    }
-
-    public List<Document> findVisibleDocuments() {
-        return documentRepository.findByIsVisibleTrue();
-    }
-
-    public List<Document> findByFileType(Long fileTypeId) {
-        return documentRepository.findByFileType_Id(fileTypeId);
-    }
-
-    public List<Document> findByKeyword(String keyword) {
-        return documentRepository.findByTitleContainingIgnoreCaseAndIsVisibleTrue(keyword);
     }
 
     public List<Document> getLatestVisibleDocuments() {
         return documentRepository.findTop20ByIsVisibleTrueOrderByCreatedAtDesc();
     }
 
-    // ================== LƯU FILE ==================
+    public long count() {
+        return documentRepository.count();
+    }
+
+    /*SEARCH – KHỚP HTML category = category.name*/
+    public List<DocumentSearchDTO> searchDocuments(String keyword, Long categoryId, User user) {
+        System.out.println("Service called | category: " + categoryId + " | role: " + user.getRole());
+
+        if (keyword != null && keyword.isBlank()) keyword = null;
+
+        List<Document> docs = documentRepository.searchDocuments(keyword, categoryId, user.getRole());
+        System.out.println("Repository returned " + docs.size() + " documents");
+
+        return docs.stream()
+                .map(d -> new DocumentSearchDTO(
+                        d.getId(),
+                        d.getTitle(),
+                        d.getCategory().getName(),
+                        d.getPdfFilename()
+                ))
+                .toList();
+    }
+
+    private User.Role getCurrentUserRole() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return null;
+        }
+
+        Object principal = auth.getPrincipal();
+        if (!(principal instanceof CustomUserDetails cud)) {
+            return null;
+        }
+
+        return cud.getUser().getRole();
+    }
+
+    public List<Document> findVisibleDocuments() {
+        return documentRepository.findByIsVisibleTrue();
+    }
+
+    // Lưu file
     private String storeFile(MultipartFile file) {
         try {
             Path uploadPath = Paths.get(UPLOAD_DIR).toAbsolutePath();
@@ -120,7 +161,7 @@ public class DocumentService {
         }
     }
 
-    // ================== SINH META ==================
+    // SINH META
     private String generateMeta(String title) {
         if (title == null) return "tai-lieu";
 
@@ -141,7 +182,8 @@ public class DocumentService {
         return meta;
     }
 
-    // ================== LƯU DOCUMENT MỚI ==================
+
+    // LƯU DOCUMENT MỚI
     public void saveDocument(
             String title,
             String description,
@@ -183,38 +225,59 @@ public class DocumentService {
 
             fileConvertService.convertToPdf(inputPath, outputFolder);
 
-            // ======================
             // Tạo tên PDF đúng chuẩn
-            // ======================
             String pdfName = fileName.replaceAll("\\.[^.]+$", "") + ".pdf";
             String pdfPath = Paths.get(PDF_DIR + pdfName).toAbsolutePath().toString();
 
 
-            // Lưu vào DB
+            // LƯU DOCUMENT
             Document doc = new Document();
             doc.setTitle(title);
             doc.setDescription(description);
             doc.setFileType(fileType);
             doc.setCategory(category);
             doc.setMeta(meta);
-            doc.setIsVisible(isVisible);
+            doc.setVisible(isVisible);
             doc.setFilename(fileName);
             doc.setMimeType(file.getContentType());
             doc.setSize(file.getSize());
             doc.setFilePath(storedPath.toString());
 
-            // GÁN PDF FILE, RẤT QUAN TRỌNG
+            if (creator == null || creator.getId() == null) {
+                throw new RuntimeException("User tạo tài liệu không hợp lệ");
+            }
+
+
+            User managedUser = userRepository.findById(creator.getId())
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy user tạo tài liệu"));
+
+            doc.setCreatedBy(managedUser); // ⭐⭐⭐ BẮT BUỘC
+
+            // PDF
             doc.setPdfFilename(pdfName);
             doc.setPdfPath(pdfPath);
 
-            // Gán quyền xem
-            if (creator != null && creator.getRole() != null) {
-                doc.getVisibleToRoles().add(creator.getRole());
-            } else {
+            // Quyền xem
+            doc.getVisibleToRoles().clear();
+
+            if (isVisible) {
+                // Công khai → EMPLOYEE + CEO
                 doc.getVisibleToRoles().add(User.Role.EMPLOYEE);
+                doc.getVisibleToRoles().add(User.Role.CEO);
+            } else {
+                // Riêng tư → chỉ người tạo
+                doc.getVisibleToRoles().add(managedUser.getRole());
             }
 
+            // Lưu DB
             documentRepository.save(doc);
+
+            if (managedUser.isAdmin()) {
+                notificationService.notifyDocumentUploaded(doc);
+            }
+
+            File pdfFile = new File(pdfPath);
+            pdfPreviewService.generateFirstPagePreview(pdfFile, doc.getId());
 
         } catch (Exception e) {
             throw new RuntimeException("Lỗi khi lưu tài liệu: " + e.getMessage(), e);
@@ -222,7 +285,8 @@ public class DocumentService {
     }
 
 
-    // ================== CẬP NHẬT DOCUMENT ==================
+    // CẬP NHẬT DOCUMENT
+    @Transactional
     public void updateDocument(
             Long id,
             String title,
@@ -232,15 +296,47 @@ public class DocumentService {
             String meta,
             boolean isVisible,
             MultipartFile file,
-            User editor) {
+            User editor
+    ) {
 
+        //       VALIDATE EDITOR
+        if (editor == null || editor.getId() == null) {
+            throw new RuntimeException("Người chỉnh sửa không hợp lệ");
+        }
+
+        User managedEditor = userRepository.findById(editor.getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người chỉnh sửa"));
+
+        // LOAD DOCUMENT
         Document doc = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
 
+        // QUYỀN SỬA
+        // Employee chỉ được sửa tài liệu của mình
+        if (managedEditor.getRole() == User.Role.EMPLOYEE &&
+                !doc.getCreatedBy().getId().equals(managedEditor.getId())) {
+            throw new RuntimeException("Bạn không có quyền sửa tài liệu này");
+        }
+
+        // Không cho sửa nếu đã trình ký hoặc đã duyệt
+        if (doc.getStatus() != DocumentStatus.DRAFT) {
+            throw new RuntimeException("Không thể chỉnh sửa tài liệu sau khi đã trình ký");
+        }
+
+        //       UPDATE BASIC INFO
         doc.setTitle(title);
         doc.setDescription(description);
         doc.setMeta(meta);
-        doc.setIsVisible(isVisible);
+        doc.setVisible(isVisible);
+
+        doc.getVisibleToRoles().clear();
+
+        if (isVisible) {
+            doc.getVisibleToRoles().add(User.Role.EMPLOYEE);
+            doc.getVisibleToRoles().add(User.Role.CEO);
+        } else {
+            doc.getVisibleToRoles().add(managedEditor.getRole());
+        }
 
         FileType fileType = fileTypeRepository.findById(fileTypeId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy loại file"));
@@ -250,31 +346,211 @@ public class DocumentService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy danh mục"));
         doc.setCategory(category);
 
-        // Nếu có file mới => xóa file cũ + lưu file mới
+        //       FILE MỚI
         if (file != null && !file.isEmpty()) {
+
+            // ❌ Xóa file cũ
             deletePhysicalFile(doc.getFilePath());
+            deletePhysicalFile(doc.getPdfPath());
+
+            // Xóa preview cũ
+            pdfPreviewService.deleteAllPreviewsByDocumentId(doc.getId());
+
+            // Lưu file mới
             String newFileName = storeFile(file);
             Path storedPath = Paths.get(UPLOAD_DIR + newFileName);
+
+            // Convert PDF
+            File pdfFolder = new File(PDF_DIR);
+            if (!pdfFolder.exists()) pdfFolder.mkdirs();
+
+            try {
+                fileConvertService.convertToPdf(
+                        storedPath.toAbsolutePath().toString(),
+                        pdfFolder.getAbsolutePath()
+                );
+            } catch (Exception e) {
+                throw new RuntimeException("Lỗi convert sang PDF", e);
+            }
+
+            String pdfName = newFileName.replaceAll("\\.[^.]+$", "") + ".pdf";
+            String pdfPath = Paths.get(PDF_DIR + pdfName)
+                    .toAbsolutePath().toString();
 
             doc.setFilename(newFileName);
             doc.setMimeType(file.getContentType());
             doc.setSize(file.getSize());
             doc.setFilePath(storedPath.toString());
+            doc.setPdfFilename(pdfName);
+            doc.setPdfPath(pdfPath);
+
+            // Generate preview mới
+            pdfPreviewService.generateFirstPagePreview(
+                    new File(pdfPath),
+                    doc.getId()
+            );
         }
 
         documentRepository.save(doc);
     }
 
-    // ================== XOÁ DOCUMENT ==================
+    // xóa tài liệu
+    @Transactional
     public void deleteById(Long id) {
-        Optional<Document> opt = documentRepository.findById(id);
-        if (opt.isPresent()) {
-            Document doc = opt.get();
+        Document doc = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
 
-            deletePhysicalFile(doc.getFilePath());
+        doc.setDeleted(true);
+        doc.setDeletedAt(java.time.LocalDateTime.now());
 
-            documentRepository.deleteById(id);
+        documentRepository.save(doc);
+    }
+
+
+    // tài liệu đã lưu
+    public List<DocumentSearchDTO> getSavedDocuments(Long userId) {
+        return getDocumentsByAction(
+                userId,
+                UserDocumentAction.ActionType.SAVED
+        );
+    }
+
+    //tài liệu đã xem
+    public List<DocumentSearchDTO> getRecentViewed(Long userId) {
+        return getDocumentsByAction(
+                userId,
+                UserDocumentAction.ActionType.VIEWED
+        );
+    }
+
+    private DocumentSearchDTO toDTO(Document d, Long userId) {
+        return new DocumentSearchDTO(
+                d,
+                actionRepo.existsByUserIdAndDocumentIdAndActionType(userId, d.getId(), UserDocumentAction.ActionType.FAVORITE),
+                actionRepo.existsByUserIdAndDocumentIdAndActionType(userId, d.getId(), UserDocumentAction.ActionType.SAVED),
+                actionRepo.existsByUserIdAndDocumentIdAndActionType(userId, d.getId(), UserDocumentAction.ActionType.PINNED)
+        );
+    }
+
+    public List<DocumentSearchDTO> getDocumentsByAction(Long userId, UserDocumentAction.ActionType type) {
+        return actionRepo.findByUserIdAndActionType(userId, type)
+                .stream()
+                .map(a -> toDTO(a.getDocument(), userId))
+                .toList();
+    }
+
+    // Tài liệu tải nhiều nhất
+    public List<DocumentSearchDTO> getLatestDocumentsWithActions(int limit, Long userId) {
+        return documentRepository
+                .findAllByOrderByCreatedAtDesc(PageRequest.of(0, limit))
+                .stream()
+                .map(d -> toDTO(d, userId))
+                .toList();
+    }
+
+    // Tài liệu tải nhiều nhất
+    public List<DocumentSearchDTO> getPopularDocumentsWithActions(int limit, Long userId) {
+
+        List<DocumentSearchDTO> popular = downloadService.getTop5Downloaded();
+
+        if (popular.isEmpty()) {
+            return documentRepository.findTop20ByOrderByCreatedAtDesc()
+                    .stream()
+                    .limit(limit)
+                    .map(d -> toDTO(d, userId))
+                    .toList();
+        }
+
+        return popular.stream()
+                .map(dto -> {
+                    Document d = documentRepository.findById(dto.getId()).orElse(null);
+                    if (d == null) return null;
+                    DocumentSearchDTO nd = toDTO(d, userId);
+                    nd.setDownloadCount(dto.getDownloadCount());
+                    return nd;
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    // Tải tài liệu
+    public ResponseEntity<Resource> downloadFile(Long docId) {
+
+        Document doc = documentRepository.findById(docId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
+
+        Path filePath = Paths.get("uploads/original").resolve(doc.getFilename());
+
+        try {
+            Resource resource = new UrlResource(filePath.toUri());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + doc.getFilename() + "\"")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("Không đọc được file");
         }
     }
+
+
+    // Lọc tài liệu
+    public Page<Document> getDocumentsForAdmin(
+            User admin,
+            int page,
+            int size,
+            Long categoryId,
+            Long fileTypeId,
+            DocumentStatus status
+    ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        return documentRepository.findAdminUploadedDocuments(
+                admin,
+                categoryId,
+                fileTypeId,
+                status,
+                pageable
+        );
+    }
+
+
+    //Upload file tuwf user
+    @Transactional
+    public void uploadForUser(MultipartFile file, String title, User user) {
+
+        if (user == null || user.getId() == null) {
+            throw new RuntimeException("User không hợp lệ");
+        }
+
+        // mặc định cho USER
+        Long defaultFileTypeId = fileTypeRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Chưa có loại file"))
+                .getId();
+
+        Long defaultCategoryId = categoryRepository.findAll()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Chưa có danh mục"))
+                .getId();
+
+        saveDocument(
+                title,
+                null,
+                defaultFileTypeId,
+                defaultCategoryId,
+                null,
+                false,
+                file,
+                user
+        );
+    }
+
 
 }

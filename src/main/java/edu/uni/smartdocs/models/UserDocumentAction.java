@@ -1,43 +1,50 @@
 package edu.uni.smartdocs.models;
+
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
-@Data
 @Entity
-@Table(
-        name = "user_document_actions",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"user_id", "document_id", "action_type"})
-        }
-)
+@Table(name = "user_document_action")
+@Getter
+@Setter
 public class UserDocumentAction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    // USER
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "document_id")
+    //     DOCUMENT    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "document_id", nullable = false)
     private Document document;
 
+    //     ACTION TYPE    
     @Enumerated(EnumType.STRING)
-    @Column(name = "action_type")
+    @Column(name = "action_type", nullable = false)
     private ActionType actionType;
 
-    private String tagValue;
+    //     CREATED TIME (🔥 THIẾU CÁI NÀY)    
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
 
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     public enum ActionType {
-        FAVORITE,
-        SAVED,
-        TAG,
         VIEWED,
+        DOWNLOAD,
+        SAVED,
+        FAVORITE,
         PINNED
     }
+
 }

@@ -52,7 +52,7 @@
 
     <div class="main-content">
 
-        <h1>Danh sách danh mục</h1>
+        <h2>Danh sách danh mục</h2>
 
         <!-- Thông báo thành công -->
         <div th:if="${success}" class="alert alert-success" style="font-size: 16px;">
@@ -70,6 +70,40 @@
             <a th:href="@{/admin/categories/create}" class="btn btn-add">➕ Thêm danh mục</a>
         </div>
 
+        <nav th:if="${totalPages > 1}" class="mt-4 mb-4 ">
+            <ul class="pagination justify-content-end">
+
+                <!-- Previous -->
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/admin/categories/index(page=${currentPage - 1}, size=${size})}">
+                        «
+                    </a>
+                </li>
+
+                <!-- Page numbers -->
+                <li class="page-item"
+                    th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                    th:classappend="${i == currentPage} ? 'active'">
+                    <a class="page-link"
+                       th:text="${i + 1}"
+                       th:href="@{/admin/categories/index(page=${i}, size=${size})}">
+                    </a>
+                </li>
+
+                <!-- Next -->
+                <li class="page-item"
+                    th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                    <a class="page-link"
+                       th:href="@{/admin/categories/index(page=${currentPage + 1}, size=${size})}">
+                        »
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+
+
         <div class="table-wrapper">
             <table class="table">
                 <thead>
@@ -84,7 +118,7 @@
 
                 <tbody>
                 <tr th:each="cat, iterStat : ${categories}">
-                    <td th:text="${iterStat.index + 1}">1</td>
+                    <td th:text="${cat.id}"></td>
                     <td th:text="${cat.name}">Văn bản</td>
                     <td th:text="${cat.description != null ? cat.description : '-'}">Mô tả</td>
                     <td th:text="${cat.documents != null ? #lists.size(cat.documents) : 0}">0</td>

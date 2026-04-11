@@ -19,4 +19,12 @@ public class EmailService {
                 + resetLink + "\n\nLiên kết này có hiệu lực trong 24 giờ.\n\nTrân trọng,\nĐội ngũ hỗ trợ.");
         mailSender.send(message);
     }
+
+    public void send(String to, String subject, String content) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(content);
+        mailSender.send(message);
+    }
 }

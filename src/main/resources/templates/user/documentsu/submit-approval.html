@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Popup trình ký -->
+<div th:fragment="modal">
+
+  <div class="modal fade" id="submitModal" tabindex="-1"
+       aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <form id="submitApprovalForm"
+              method="post"
+              th:action="@{/user/documentsu/submit-approval}">
+
+          <div class="modal-header">
+            <h5 class="modal-title">📨 Trình ký văn bản</h5>
+            <button type="button" class="btn-close"
+                    data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+
+            <!-- ⭐ BẮT BUỘC: documentId -->
+            <input type="hidden"
+                   name="documentId"
+                   id="documentIdInput"/>
+
+            <div class="mb-3">
+              <label class="form-label">Chọn CEO duyệt</label>
+              <select class="form-select"
+                      name="approverId"
+                      required>
+                <option value="">-- Chọn CEO --</option>
+                <option th:each="u : ${ceoList}"
+                        th:value="${u.id}"
+                        th:text="${u.fullName}">
+                </option>
+              </select>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+              Hủy
+            </button>
+            <button type="submit"
+                    id="submitApprovalBtn"
+                    class="btn btn-primary">
+              Trình ký
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- js gán id tài liệu-->
+  <script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+      const submitModal = document.getElementById('submitModal');
+
+      if (submitModal) {
+        submitModal.addEventListener('show.bs.modal', function (event) {
+          const button = event.relatedTarget;
+          if (!button) return;
+
+          const documentId = button.getAttribute('data-doc-id');
+          document.getElementById('documentIdInput').value = documentId;
+        });
+      }
+    });
+  </script>
+
+  <!-- Gửi mail 1 lần khi nhấn trình ký-->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+      const form = document.getElementById("submitApprovalForm");
+      const button = document.getElementById("submitApprovalBtn");
+
+      if (form) {
+        form.addEventListener("submit", function () {
+
+          if (button.disabled) {
+            return false;
+          }
+
+          button.disabled = true;
+          button.classList.remove("btn-primary");
+          button.classList.add("btn-secondary");
+          button.innerHTML = "⏳ Đang gửi...";
+
+        });
+      }
+
+    });
+  </script>
+
+</div>
+
+</body>
+</html>

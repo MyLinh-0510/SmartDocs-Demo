@@ -27,11 +27,6 @@
             background-color: #fff;
         }
 
-        .main-content h1 {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
         .add {
             margin-bottom: 30px;
         }
@@ -52,28 +47,162 @@
     <!-- Main content -->
     <div class="main-content">
 
-        <h1>Danh sách người dùng</h1>
+        <h2>Danh sách người dùng</h2>
+
+        <!-- Hiển thị lỗi -->
+        <div th:if="${error}" class="alert alert-danger" th:utext="${error}"></div>
+
+        <!-- Hiển thị thành công -->
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
         <!-- Nút thêm người dùng -->
         <div class="add">
             <a th:href="@{/admin/users/create}" class="btn btn-add">➕ Thêm người dùng</a>
         </div>
 
-        <!-- Hiển thị lỗi -->
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <div class="d-flex gap-2 mb-3">
 
-        <!-- Hiển thị thành công -->
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+            <!-- Download template -->
+            <a href="/admin/users/template" class="btn btn-success">
+                ⬇ Tải CSV mẫu
+            </a>
+
+            <!-- Upload CSV -->
+            <form action="/admin/users/import" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                <input type="file" name="file" accept=".csv" class="form-control" required>
+
+                <button type="submit" class="btn btn-primary">📤 Import CSV</button>
+            </form>
+
+        </div>
+        <!-- Search wrapper -->
+        <div class="filter-box">
+            <form method="get" th:action="@{/admin/users/index}">
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <label>Số điện thoại</label>
+                        <input type="text"
+                               name="phone"
+                               class="form-control"
+                               th:value="${param.phone}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Email</label>
+                        <input type="text"
+                               name="email"
+                               class="form-control"
+                               th:value="${param.email}">
+                    </div>
+
+                    <!-- Tìm theo vai trò -->
+                    <div class="col-md-4">
+                        <label class="form-label">Vai trò</label>
+
+                        <div class="role-filter">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="roles" value="ADMIN"
+                                       th:checked="${param.roles != null and param.roles.contains('ADMIN')}">
+                                <label class="form-check-label">ADMIN</label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="roles" value="CEO"
+                                       th:checked="${param.roles != null and param.roles.contains('CEO')}">
+                                <label class="form-check-label">CEO</label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="roles" value="EMPLOYEE"
+                                       th:checked="${param.roles != null and param.roles.contains('EMPLOYEE')}">
+                                <label class="form-check-label">EMPLOYEE</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 d-flex align-items-end justify-content-center gap-3">
+                        <button type="submit" class="btn btn-primary btn-fixed">
+                            🔍 Lọc
+                        </button>
+
+                        <a th:href="@{/admin/users/index}"
+                           class="btn btn-secondary btn-fixed">
+                            ❌ Xóa
+                        </a>
+                    </div>
+
+
+
+                </div>
+            </form>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-end mt-4 mb-3"
+             th:if="${totalPages > 1}">
+            <nav>
+                <ul class="pagination mb-0">
+
+                    <!-- PREVIOUS -->
+                    <li class="page-item"
+                        th:classappend="${currentPage == 0} ? 'disabled'">
+                        <!-- PREVIOUS -->
+                        <a class="page-link"
+                           th:href="@{/admin/users/index(
+                                page=${i},
+                                size=${size},
+                                phone=${param.phone},
+                                email=${param.email},
+                                roles=${param.roles}
+                           )}">«
+                        </a>
+
+                    </li>
+
+                    <!-- PAGE NUMBERS -->
+                    <li class="page-item"
+                        th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${i == currentPage} ? 'active'">
+                        <a class="page-link"
+                           th:href="@{/admin/users/index(
+                        page=${i},
+                        size=${size}
+                   )}"
+                           th:text="${i + 1}">
+                        </a>
+                    </li>
+
+                    <!-- NEXT -->
+                    <li class="page-item"
+                        th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
+                        <a class="page-link"
+                           th:href="@{/admin/users/index(
+                        page=${currentPage + 1},
+                        size=${size}
+                   )}">
+                            »
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
 
         <!-- Bảng danh sách -->
         <table class="table">
             <thead>
             <tr>
                 <th>ID</th>
-                <th>Tên khách hàng</th>
+                <th>Ảnh đại diện</th>
+                <th>Tên người dùng
+                </th>
                 <th>Số điện thoại</th>
                 <th>Email</th>
-                <th>Admin</th>
+                <th>Vai trò</th>
                 <th>Hành động</th>
             </tr>
             </thead>
@@ -81,22 +210,51 @@
             <tbody>
             <tr th:each="user : ${users}">
                 <td th:text="${user.id}"></td>
+                <td>
+                    <img th:src="@{'/uploads/avatars/' + ${user.avatar}}"
+                         alt="Avatar"
+                         style="width:60px; height:60px; object-fit:cover; border-radius:50%;" />
+                </td>
                 <td th:text="${user.name}"></td>
                 <td th:text="${user.phone}"></td>
                 <td th:text="${user.email}"></td>
-                <td th:text="${user.admin ? 'Yes' : 'No'}"></td>
+                <td>
+                    <span th:switch="${user.role.name()}">
+                        <span th:case="'ADMIN'" >ADMIN</span>
+                        <span th:case="'CEO'">CEO</span>
+                        <span th:case="'EMPLOYEE'">EMPLOYEE</span>
+                    </span>
+                </td>
 
                 <td>
                     <a th:href="@{'/admin/users/edit/' + ${user.id}}"
                        class="btn btn-edit">✏️ Sửa</a>
 
-                    <a th:href="@{'/admin/users/delete/' + ${user.id}}"
-                       class="btn btn-danger delete"
-                       th:attr="data-username=${user.name}">
-                        🗑️ Xóa
-                    </a>
+                    <form th:action="@{'/admin/users/lock/' + ${user.id}}"
+                          method="post"
+                          style="display:inline">
+
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                        <button type="submit"
+                                th:class="${user.enabled} ? 'btn btn-warning' : 'btn btn-success'"
+                                th:text="${user.enabled} ? '🔒 Khóa' : '🔓 Mở khóa'"
+                                th:attr="onclick=${user.enabled}
+                                ? 'return confirm(&quot;Bạn có chắc chắn muốn khóa tài khoản này?&quot;)'
+                                : 'return confirm(&quot;Bạn có chắc chắn muốn mở khóa tài khoản này?&quot;)'">
+                        </button>
+                    </form>
+
                 </td>
             </tr>
+
+            <!-- KHÔNG CÓ DỮ LIỆU -->
+            <tr th:if="${#lists.isEmpty(users)}">
+                <td colspan="7" class="text-center text-muted py-4 fst-italic">
+                    📭 Không tìm thấy người dùng phù hợp với điều kiện tìm kiếm
+                </td>
+            </tr>
+
             </tbody>
         </table>
 
@@ -108,20 +266,6 @@
     </div>
 </div>
 
-<!-- Xác nhận xóa người dùng -->
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll(".delete").forEach(btn => {
-            btn.addEventListener("click", function(event) {
-                const name = this.getAttribute("data-username");
-                if (!confirm(`Bạn có chắc chắn muốn xóa người dùng ${name}?`)) {
-                    event.preventDefault();
-                }
-            });
-        });
-    });
-</script>
-
 <script>
     setTimeout(function () {
         document.querySelectorAll('.alert').forEach(function (alert) {
@@ -129,9 +273,8 @@
             alert.style.opacity = "0";
             setTimeout(() => alert.remove(), 400);
         });
-    }, 5000);
+    }, 30000);
 </script>
-
 
 </body>
 </html>

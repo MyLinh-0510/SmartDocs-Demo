@@ -10,7 +10,8 @@
     overflow: hidden;
 }
 
-.table th, .table td {
+.table th,
+.table td {
     padding: 12px 14px;
     border: 1px solid #dee2e6;
     text-align: left;
@@ -32,69 +33,106 @@
 
 
 /* ===========================
-        BUTTON FIX CHUẨN
+        BUTTON SYSTEM (GLOBAL)
+   ÁP DỤNG CHO TẤT CẢ FILE
 =========================== */
 .btn,
 button,
 a.btn {
-    height: 42px !important;
+    min-height: 42px !important;
     padding: 0 20px !important;
     border-radius: 8px !important;
 
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-
     gap: 8px !important;
-    font-size: 15px !important;
-    font-weight: 500;
 
-    text-decoration: none !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+
     white-space: nowrap;
+    text-decoration: none !important;
 
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
 }
 
-/* Khi focus vẫn không thêm viền */
 .btn:focus,
 button:focus,
 a.btn:focus {
     outline: none !important;
     box-shadow: none !important;
-    border: none !important;
 }
 
-/* Nút nhỏ dùng trong bảng */
-.btn-sm {
+/* Wrapper chứa nút */
+.add,
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ===========================
+   BUTTON SIZE THEO NGỮ CẢNH
+=========================== */
+
+/* Nút chính (Thêm mới, Submit form) */
+.btn-add,
+.btn-primary {
+    min-width: 180px;
+}
+
+/* Nút trong bảng */
+.table .btn {
+    min-width: 110px;
     height: 36px !important;
-    padding: 0 14px !important;
-    border-radius: 6px !important;
+    padding: 0 !important;
     font-size: 14px !important;
 }
 
-/* Button Colors */
+/* Form trong table không phá layout */
+.table form {
+    display: inline-flex;
+    margin: 0 !important;
+}
+
+
+/* ===========================
+        ACTION BUTTONS
+=========================== */
+.table td .action-buttons {
+    justify-content: center;
+    flex-wrap: nowrap; /* cấm xuống dòng */
+}
+
+
+/* ===========================
+        BUTTON COLORS
+=========================== */
 .btn-add      { background: #fcba03 !important; color: #fff !important; }
-.btn-update    { background: #fd4501 !important; color: #fff !important; }
+.btn-update   { background: #fd4501 !important; color: #fff !important; }
 .btn-danger   { background: #f1172c !important; color: #fff !important; }
 .btn-edit     { background: #17a2b8 !important; color: #fff !important; }
-.btn-info      { background: #31bbd6 !important; color: #fff !important; }
-.btn-view     { background: #8e8f8f !important; color: #fff !important; }
+.btn-info     { background: #087b91 !important; color: #fff !important; }
+.btn-doc     { background: #0d6efd !important; color: #fff !important; }
+.btn-view {background-color: #ffdc00 !important; color: #ffffff!important}
+.btn-chat {background-color: #1fb807 !important; color: #ffffff!important}
 
-.btn-add:hover      { background: #f4d406 !important; }
-.btn-update:hover     { background: #e4460d !important; }
-.btn-danger:hover   { background: #c81022 !important; }
-.btn-edit:hover     { background: #138496 !important; }
-.btn-info:hover     { background: #06a1bf !important}
-.btn-view:hover     { background: #515353 !important; color: #fff !important; }
+.btn-add:hover    { background: #f4d406 !important; }
+.btn-update:hover { background: #e4460d !important; }
+.btn-danger:hover { background: #c81022 !important; }
+.btn-edit:hover   { background: #138496 !important; }
+.btn-info:hover   { background: #06a1bf !important; }
+.btn-doc:hover   { background: #081b57 !important; color: #fff !important; }
+.btn-view:hover {background-color: #9c8903 !important;color: #fff!important;}
+.btn-chat:hover {background-color: #115703 !important; color: #ffffff!important}
 
-.back-link {
-    margin-top: 30px;
-    text-align: center;
-}
-/* LỖI */
-/* Alert Styles for Success and Error */
+.btn-fixed   { min-width: 160px; text-align: center; margin-top: 10px}
+
+/* ALERT*/
 .alert {
     padding: 15px;
     margin-bottom: 20px;
@@ -103,21 +141,20 @@ a.btn:focus {
     font-weight: bold;
 }
 
-/* Success Message */
 .alert-success {
     background-color: #d4edda;
     color: #155724;
     border-left: 5px solid #28a745;
 }
 
-/* Error Message */
 .alert-error {
     background-color: #f8d7da;
     color: #721c24;
     border-left: 5px solid #f1172c;
 }
 
-/* icon mắt */
+
+/* FORM + INPUT */
 .form-group {
     margin-bottom: 20px;
 }
@@ -129,7 +166,9 @@ a.btn:focus {
     font-size: 15px;
 }
 
-.form-group input[type="text"], .form-group input[type="email"], .form-group input[type="password"] {
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
     width: 100%;
     padding: 10px;
     border: 1px solid #ccc;
@@ -144,16 +183,16 @@ a.btn:focus {
 
 .input-wrapper input {
     width: 100%;
-    padding-right: 50px;  /* tạo khoảng trống cho icon */
+    padding-right: 50px;
     height: 45px;
     font-size: 15px;
 }
 
 .toggle-password {
     position: absolute;
-    top: 35%;  /* căn chính giữa chiều dọc */
-    right: 14px; /* khoảng cách với mép phải input */
-    transform: translateY(-50%); /* căn giữa chính xác */
+    top: 35%;
+    right: 14px;
+    transform: translateY(-50%);
     font-size: 20px;
     cursor: pointer;
     color: #6c757d;
@@ -164,61 +203,285 @@ a.btn:focus {
     color: #0d6efd;
 }
 
-/* ===========================
-        RESPONSIVE
-=========================== */
+
+/* BACK LINK */
+.back-link {
+    margin-top: 30px;
+    text-align: center;
+}
+
+/*Phân trang */
+.pagination .page-link {
+    color: #333;
+    border-radius: 6px;
+    margin: 0 4px;
+}
+
+.pagination .active .page-link {
+    background-color: #31bbd6;
+    border-color: #31bbd6;
+    color: #fff;
+}
+
+.pagination .page-link:hover {
+    background-color: #e9e9e9;
+}
+
+.pagination {
+    margin-bottom: 20px;
+}
+
+/* filted = Sreach */
+.filter-box {
+    background: #f8f9fa;
+    border: 1px solid #e1e5ea;
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 24px;
+    margin-top: 60px;
+}
+
+/* label trong filter */
+.filter-box label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+/* input trong filter */
+.filter-box .form-control {
+    height: 42px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* hàng filter thẳng đẹp */
+.filter-box .row {
+    align-items: end;
+}
+
+.filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+/* FIX VỠ NÚT KHI MÀN HÌNH NHỎ */
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;          /* cho phép xuống dòng */
+    gap: 6px;
+    justify-content: center;
+}
+
+.action-buttons form {
+    margin: 0;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column; /* mỗi nút 1 dòng */
+        align-items: stretch;
+    }
+
+    .action-buttons a,
+    .action-buttons button {
+        width: 100%;
+    }
+}
+
+
+/* ROLE FILTER  */
+.filter-box .role-filter {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+
+    height: 42px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid #dcdcdc;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+/* focus giống input */
+.filter-box .role-filter:focus-within {
+    border-color: #31bbd6;
+    box-shadow: 0 0 0 0.15rem rgba(49, 187, 214, 0.25);
+}
+
+.filter-box .role-filter .form-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+.filter-box .role-filter .form-check-input {
+    margin: 0;
+    cursor: pointer;
+}
+
+.filter-box .role-filter .form-check-label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    color: #2c3e50;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .filter-box .role-filter {
+        height: auto;
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+    }
+}
+
+/* RESPONSIVE */
 
 /* Mobile nhỏ */
 @media (max-width: 480px) {
+
+    /* FORM SEARCH */
+    .card .row {
+        row-gap: 12px;
+    }
+
+    /* Input full width */
+    .form-control {
+        font-size: 13px;
+        height: 38px;
+    }
+
+    /* Button stack */
+    .search-actions,
+    .card form .d-flex {
+        flex-direction: column !important;
+    }
+
+    .search-actions .btn,
+    .card form .btn {
+        width: 100% !important;
+    }
+
+    /* TABLE */
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .table th,
+    .table td {
+        font-size: 12px;
+        padding: 8px;
+        white-space: nowrap;
+    }
+
+    /* BUTTON */
     .btn {
-        height: 34px !important;
+        min-height: 34px !important;
         padding: 0 14px !important;
         font-size: 13px !important;
     }
 
-    .btn-sm {
-        height: 30px !important;
+    .table .btn {
+        min-width: 80px;
+        height: 32px !important;
         font-size: 12px !important;
     }
 
-    .table th, .table td {
-        padding: 8px;
-        font-size: 12px;
+    /* PAGINATION */
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
     }
 
-    .table-wrapper {
-        overflow-x: auto;
+    .filter-box .role-filter {
+        flex-wrap: wrap;
+        gap: 12px 20px;
     }
 }
 
-/* Mobile lớn / Tablet đứng */
+
+/* Mobile lớn / Tablet */
 @media (max-width: 768px) {
+
+    /* SEARCH */
+    .card .row > div {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Role checkbox xuống hàng */
+    .form-check {
+        margin-right: 12px;
+    }
+
+    /* BUTTON */
     .btn {
-        height: 36px !important;
+        min-height: 36px !important;
         padding: 0 16px !important;
         font-size: 14px !important;
     }
 
-    .table th, .table td {
-        padding: 10px;
-        font-size: 13px;
+    .table .btn {
+        min-width: 90px;
+        height: 34px !important;
+        font-size: 13px !important;
+    }
+
+    /* ACTION BUTTONS TRONG TABLE */
+    .action-buttons {
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
     }
 }
+
 
 /* Tablet ngang */
 @media (max-width: 1024px) {
+
+    /* SEARCH */
+    .card .row > div {
+        margin-bottom: 8px;
+    }
+
+    /* BUTTON */
     .btn {
-        height: 38px !important;
-        padding: 0 18px !important;
+        min-height: 38px !important;
         font-size: 14px !important;
+    }
+
+    /* TABLE */
+    .table th,
+    .table td {
+        font-size: 14px;
     }
 }
 
+
 /* Laptop lớn */
 @media (min-width: 1400px) {
+
+    .main-content {
+        padding: 40px 60px;
+    }
+
     .btn {
-        height: 40px !important;
-        padding: 0 20px !important;
+        min-height: 42px !important;
         font-size: 15px !important;
+    }
+
+    .table th,
+    .table td {
+        padding: 14px 18px;
+        font-size: 15px;
     }
 }

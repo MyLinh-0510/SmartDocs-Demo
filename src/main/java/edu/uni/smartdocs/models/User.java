@@ -1,14 +1,16 @@
 package edu.uni.smartdocs.models;
 
 import jakarta.persistence.*;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Data
 @Entity
@@ -24,7 +26,7 @@ public class User implements Serializable {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = true, length = 12)
+    @Column(length = 10)
     private String phone;
 
     @Column(nullable = false, unique = true)
@@ -41,8 +43,11 @@ public class User implements Serializable {
     private Role role = Role.EMPLOYEE;
 
     private String resetToken;
-
     private LocalDateTime resetTokenExpiry;
+
+    private String avatar;
+
+    private boolean enabled = true;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
@@ -53,29 +58,61 @@ public class User implements Serializable {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user")
-    private List<Contact> contactMessages;
-
-    @OneToMany(mappedBy = "user")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<UserDocumentAction> actions;
+
+    @OneToMany(mappedBy = "createdBy")
+    private List<DocumentVersion> documentVersions;
+
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(
+                new SimpleGrantedAuthority("ROLE_" + this.role.name())
+        );
+    }
+
 
     public enum Role {
         ADMIN, CEO, EMPLOYEE
     }
 
-    // Constructors
-    public User() {}
+    public User() {
+    }
 
-    public User(String name, String email, String password, boolean isAdmin, Role role) {
+    public User(String name, String email, String password, Role role) {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.isAdmin = isAdmin;
         this.role = role;
+        syncAdminFromRole();
     }
 
-    // Helper method
+    // Đồng bộ isAdmin: chỉ ADMIN mới là admin (CEO không phải admin hệ thống)
+    public void syncAdminFromRole() {
+        this.isAdmin = (this.role == Role.ADMIN);
+    }
+
+    // === THÊM CÁC METHOD TIỆN LỢI ĐỂ KIỂM TRA ROLE ===
+    public boolean isCEO() {
+        return this.role == Role.CEO;
+    }
+
+    public boolean isAdmin() {
+        return this.role == Role.ADMIN;
+    }
+
+    public boolean isEmployee() {
+        return this.role == Role.EMPLOYEE;
+    }
+
     public String getFullName() {
-        return this.name != null && !this.name.trim().isEmpty() ? this.name : this.email;
+        return this.name != null && !this.name.trim().isEmpty()
+                ? this.name
+                : this.email;
     }
 
+    // Optional: gọi sync khi set role (nếu dùng setter)
+    public void setRole(Role role) {
+        this.role = role;
+        syncAdminFromRole();
+    }
 }

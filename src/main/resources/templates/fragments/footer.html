@@ -1,35 +1,85 @@
-<footer th:fragment="footer" class="footer mt-5 bg-light py-4">
+<footer th:fragment="footer" class="footer py-5 mt-auto" style="background-color: #2c3e50; color: #ecf0f1;"
+        xmlns:sec="http://www.w3.org/1999/xhtml">
     <div class="container">
-        <div class="row align-items-center">
-            <!-- Cột trái: Copyright -->
-            <div class="col-md-4 text-md-start text-center mb-3 mb-md-0">
-                <p class="mb-0 fw-semibold footer-text">© 2025 Hệ thống Quản lý Văn bản & Hợp đồng nội bộ</p>
-                <p class="footer-text text-muted small">Phát triển bởi Nhóm Sinh Viên Khoa CNTT - Đại học Tôn Đức Thắng</p>
+        <div class="row gy-4">
+
+            <!-- Cột 1: Giới thiệu hệ thống - LÀM NỔI BẬT 2 DÒNG TEXT NHẠT -->
+            <div class="col-lg-4 col-md-6">
+                <h5 class="footer-title fw-bold mb-3" style="color: #1abc9c; font-size: 1.5rem;">
+                    <i class="bi bi-journal-text me-2"></i>SmartDocs
+                </h5>
+                <!-- LÀM NỔI BẬT ĐOẠN MÔ TẢ -->
+                <p class="footer-text mb-4" style="color: #ffffff; font-size: 1rem; line-height: 1.6; font-weight: 500;">
+                    Nền tảng quản lý văn bản & hợp đồng nội bộ hiện đại,<br>
+                    hỗ trợ lưu trữ an toàn, tìm kiếm nhanh chóng và phân quyền linh hoạt.
+                </p>
+                <!-- LÀM NỔI BẬT COPYRIGHT -->
+                <small class="d-block" style="color: #bdc3c7; font-weight: 600;">
+                    <i class="bi bi-c-circle me-1"></i> 2025 - IT Students TDTU
+                </small>
             </div>
 
-            <!-- Cột giữa-trái: Các link + Kết nối (đưa xuống dưới để thẳng hàng) -->
-            <div class="col-md-4 text-center text-md-start">
-                <div class="footer-links mb-2 mb-md-0">
-                    <a href="/about" class="me-3 text-decoration-none">Giới thiệu</a>
-                    <a href="/contact" class="me-3 text-decoration-none">Liên hệ</a>
-                    <a href="/privacy" class="text-decoration-none">Chính sách bảo mật</a>
-                </div>
+            <!-- Cột 2: Liên kết nhanh -->
+            <div class="col-lg-2 col-md-6">
+                <h6 class="footer-title fw-bold mb-3">Liên kết</h6>
+                <ul class="footer-list list-unstyled small">
+                    <li class="mb-2"><a th:href="@{/user/home-page}" class="text-light text-decoration-none opacity-90 hover-opacity">Trang chủ</a></li>
+                    <li class="mb-2"><a th:href="@{/user/documentsu/document-page}" class="text-light text-decoration-none opacity-90 hover-opacity">Tài liệu</a></li>
+                    <li class="mb-2"><a th:href="@{/user/contactu}" class="text-light text-decoration-none opacity-90 hover-opacity">Liên hệ hỗ trợ</a></li>
+                </ul>
             </div>
 
-            <!-- Cột giữa-phải: Icon mạng xã hội -->
-            <div class="col-md-4 text-center text-md-end">
-                <div class="d-flex justify-content-md-end justify-content-center gap-3">
-                    <a href="#" class="social-btn fs-4 ">
-                        <i class="bi bi-facebook"></i>
-                    </a>
-                    <a href="#" class="social-btn fs-4 ">
-                        <i class="bi bi-instagram"></i>
-                    </a>
-                    <a href="#" class="social-btn fs-4 ">
-                        <i class="bi bi-github"></i>
-                    </a>
-                </div>
+            <!-- Cột 3: Chức năng chính -->
+            <div class="col-lg-3 col-md-6">
+                <h6 class="footer-title fw-bold mb-3">Chức năng nổi bật</h6>
+                <ul class="footer-list list-unstyled small">
+                    <li class="mb-2">📄 Quản lý tài liệu tập trung</li>
+                    <li class="mb-2">👥 Phân quyền theo vai trò</li>
+                    <li class="mb-2">✍️ Trình ký & duyệt điện tử</li>
+                    <li class="mb-2">🔍 Tìm kiếm thông minh</li>
+                    <li class="mb-2">🔐 Bảo mật dữ liệu cao</li>
+                    <li class="mb-2">🔔 Thông báo realtime</li>
+                </ul>
             </div>
+
+            <!-- Cột 4: Quy trình ký duyệt + Kết nối -->
+            <div class="col-lg-3 col-md-6">
+                <h6 class="footer-title fw-bold mb-3">Quy trình ký duyệt</h6>
+                <ul class="footer-list list-unstyled small mb-4">
+
+                    <!-- CEO -->
+                    <li sec:authorize="hasRole('CEO')">
+                        <a th:href="@{/user/documentsu/my-documents}"
+                           class="text-warning fw-bold">
+                            📑 Văn bản cần duyệt
+                        </a>
+                    </li>
+
+                    <!-- EMPLOYEE -->
+                    <li sec:authorize="hasRole('EMPLOYEE')">
+                        <a th:href="@{/user/documentsu/my-documents}"
+                           class="text-light opacity-90 hover-opacity">
+                            ✍️ Trình ký văn bản
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <!-- Bottom line - LÀM NỔI BẬT HƠN -->
+        <div class="footer-bottom text-center mt-5 pt-4 border-top border-secondary">
+            <small style="color: #bdc3c7; font-weight: 600;">
+                Made with <i class="bi bi-heart-fill text-danger"></i> by
+                <strong>IT Students – Đại học Tôn Đức Thắng</strong>
+                | © 2025 All rights reserved
+            </small>
         </div>
     </div>
 </footer>
+
+<style>
+    .hover-opacity { transition: opacity 0.3s; }
+    .hover-opacity:hover { opacity: 1 !important; }
+</style>

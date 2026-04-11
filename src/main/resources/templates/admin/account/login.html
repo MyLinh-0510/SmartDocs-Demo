@@ -192,11 +192,10 @@
 
         <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
-        <div th:if="${param.changed}">
-            <div class="alert alert-success">
-                Đổi mật khẩu thành công! Vui lòng đăng nhập lại.
-            </div>
+        <div th:if="${param.locked}" class="alert alert-error">
+            🚫 Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.
         </div>
+
 
         <form th:action="@{/admin/account/login}" method="post">
 
@@ -213,11 +212,6 @@
                     <input type="password" id="password" name="password" required>
                     <span class="toggle-password" id="togglePassword">👁️</span>
                 </div>
-            </div>
-
-            <div class="remember-group">
-                <input type="checkbox" id="remember" name="remember">
-                <label for="remember">Lưu mật khẩu</label>
             </div>
 
             <button type="submit">Đăng nhập</button>

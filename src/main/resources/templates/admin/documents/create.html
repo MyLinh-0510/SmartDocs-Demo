@@ -72,36 +72,50 @@
             resize: vertical;
         }
 
-        .error-messages {
-            background-color: #ffe6e6;
-            border: 1px solid #ff5c5c;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            color: #a94442;
+        .upload-overlay{
+            display:none;
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.4);
+            backdrop-filter: blur(6px);
+            z-index:9999;
         }
 
-        .form-actions {
-            text-align: center; /* ✅ Căn giữa 2 nút */
-            margin-top: 25px;
+        .upload-card{
+            width:420px;
+            margin:180px auto;
+            background:#fff;
+            padding:25px;
+            border-radius:16px;
+            text-align:center;
+            box-shadow:0 20px 50px rgba(0,0,0,0.2);
         }
 
-        .form-actions .btn {
-            margin: 0 8px; /* khoảng cách giữa hai nút */
+        .progress-wrapper{
+            position:relative;
+            margin-top:15px;
         }
 
-        @media (max-width: 720px) {
-            .form-actions {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
+        .progress-container{
+            height:14px;
+            background:#eee;
+            border-radius:20px;
+            overflow:hidden;
+        }
 
-            .form-actions .btn {
-                width: 100%;
-                max-width: 250px;
-                margin: 6px 0;
-            }
+        #progressBar{
+            height:100%;
+            width:0%;
+            background:linear-gradient(90deg,#00c853,#69f0ae);
+            transition: width 0.4s ease;
+        }
+
+        #turtle{
+            position:absolute;
+            top:-30px;
+            left:0;
+            font-size:24px;
+            transition: left 0.4s ease;
         }
     </style>
 </head>
@@ -149,7 +163,7 @@
                 </select>
             </div>
 
-            <!-- ✅ Thêm chọn danh mục -->
+            <!-- Thêm chọn danh mục -->
             <div class="form-group">
                 <label for="categoryId">Danh mục</label>
                 <select name="categoryId" id="categoryId" required>
@@ -160,44 +174,152 @@
                 </select>
             </div>
 
-            <!-- ✅ Meta tự động -->
+            <!-- Meta tự động -->
             <input type="hidden" id="meta" name="meta">
 
             <script>
                 document.getElementById("title").addEventListener("input", function () {
                     const title = this.value.toLowerCase()
-                        .normalize("NFD") // bỏ dấu
+                        .normalize("NFD")
                         .replace(/[\u0300-\u036f]/g, "")
-                        .replace(/\s+/g, "-") // dùng dấu gạch ngang đẹp hơn cho meta
+                        .replace(/\s+/g, "-")
                         .replace(/[^a-z0-9-]/g, "");
 
-                    // thêm chuỗi ngẫu nhiên (6 ký tự) để tránh trùng
                     const randomSuffix = Math.random().toString(36).substring(2, 8);
                     document.getElementById("meta").value = title + "-" + randomSuffix;
                 });
             </script>
 
-
-
             <div class="form-group">
-                <label>
-                    <input type="checkbox" id="isVisible" name="isVisible" checked>
-                    Hiển thị tài liệu công khai
-                </label>
+                <div class="d-flex align-items-center gap-3">
+                    <label class="form-label mb-0 fw-semibold">
+                        Trạng thái
+                    </label>
+
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="isVisible"
+                               name="isVisible"
+                               checked
+                               onchange="updateVisibilityLabel(this)">
+                    </div>
+
+                    <span class="fw-semibold text-success"
+                          id="visibilityLabel">
+                        Công khai
+                    </span>
+                </div>
             </div>
 
-            <div class="form-actions">
+            <div class="mt-4 text-center">
+                <a th:href="@{/admin/documents/create-multiple}" class="btn btn-success">📂 Upload nhiều file</a>
                 <a th:href="@{/admin/documents/index}" class="btn btn-danger">⬅ Quay lại</a>
                 <button type="submit" class="btn btn-info">💾 Tạo tài liệu</button>
             </div>
 
         </form>
 
-
-
-
     </div>
 </div>
+
+<!-- Popup con rùa -->
+<div id="uploadPopup" class="upload-overlay">
+    <div class="upload-card">
+        <h5>🚀 Đang upload tài liệu</h5>
+
+        <div class="progress-wrapper">
+            <div id="turtle">🐢</div>
+
+            <div class="progress-container">
+                <div id="progressBar"></div>
+            </div>
+        </div>
+
+        <p id="progressText">Đang chuẩn bị...</p>
+    </div>
+</div>
+
+<script>
+    const form = document.querySelector(".create-document-form");
+    const popup = document.getElementById("uploadPopup");
+
+    let isUploading = false;
+
+    form.addEventListener("submit", function(e){
+        e.preventDefault();
+
+        if(isUploading) return;
+        isUploading = true;
+
+        popup.style.display = "block";
+
+        const formData = new FormData(form);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", form.action);
+
+        // CSRF
+        const token = document.querySelector('meta[name="_csrf"]')?.content;
+        const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+        if(token && header) xhr.setRequestHeader(header, token);
+
+        let done = false;
+
+        xhr.upload.onprogress = function(e){
+            if(e.lengthComputable){
+                let percent = Math.round((e.loaded / e.total) * 100);
+
+                const bar = document.getElementById("progressBar");
+                const turtle = document.getElementById("turtle");
+                const text = document.getElementById("progressText");
+
+                bar.style.width = percent + "%";
+                turtle.style.left = `calc(${percent}% - 12px)`;
+
+                text.innerText = "Đang upload... " + percent + "%";
+
+                // ✅ đạt 100%
+                if(percent >= 100 && !done){
+                    done = true;
+
+                    bar.style.width = "100%";
+                    turtle.style.left = "calc(100% - 12px)";
+                    text.innerText = "Hoàn tất 🎉";
+
+                    // ⏱️ delay nhẹ cho đẹp UI
+                    setTimeout(() => {
+                        window.location.href = "/admin/documents/index?success=1";
+                    }, 700);
+                }
+            }
+        };
+
+        xhr.onerror = function(){
+            alert("❌ Upload thất bại!");
+            popup.style.display = "none";
+            isUploading = false;
+        };
+
+        xhr.send(formData);
+    });
+</script>
+
+
+<script>
+    function updateVisibilityLabel(checkbox) {
+        const label = document.getElementById("visibilityLabel");
+        if (checkbox.checked) {
+            label.textContent = "Công khai";
+            label.classList.remove("text-danger");
+            label.classList.add("text-success");
+        } else {
+            label.textContent = "Riêng tư";
+            label.classList.remove("text-success");
+            label.classList.add("text-danger");
+        }
+    }
+</script>
 
 
 </body>

@@ -9,9 +9,10 @@ body {
     font-weight: 700;
     font-size: 28px;
     color: #007bff;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
     border-left: 5px solid #ffc107;
     padding-left: 12px;
+    margin-top: 60px;
 }
 
 /* ===== TABLE STYLE ===== */
@@ -71,4 +72,103 @@ body {
 .container-history {
     margin-top: 40px;
     margin-bottom: 60px;
+}
+
+.modal {
+    z-index: 2000 !important;
+}
+
+.modal-backdrop {
+    z-index: 1999 !important;
+}
+
+.chat-popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.25);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 99999;
+}
+
+.chat-header-popup {
+    background: #0d6efd;
+    color: white;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.chat-body-popup {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    background: #f5f5f5;
+}
+
+.chat-input-popup {
+    padding: 10px;
+    display: flex;
+    border-top: 1px solid #ddd;
+    background: white;
+}
+
+.chat-input-popup input {
+    flex: 1;
+    border-radius: 18px;
+    padding: 8px;
+    border: 1px solid #ccc;
+}
+
+.chat-input-popup button {
+    margin-left: 8px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 18px;
+    background: #0d6efd;
+    color: white;
+}
+
+.message-row {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.message-user {
+    justify-content: flex-end;
+}
+
+.message-admin {
+    justify-content: flex-start;
+}
+
+.admin-bubble {
+    background: #e9ecef;
+    color: #212529;
+    padding: 10px 14px;
+    border-radius: 16px;
+    border-bottom-left-radius: 0;
+    max-width: 75%;
+    word-wrap: break-word;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.message-user {
+    justify-content: flex-end;
+}
+
+.user-bubble {
+    background: #0d6efd;
+    color: white;
+    padding: 10px 14px;
+    border-radius: 16px;
+    border-bottom-right-radius: 0;
+    max-width: 75%;
+    word-wrap: break-word;
 }

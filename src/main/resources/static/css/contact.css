@@ -1,21 +1,49 @@
-/* ===== HERO SECTION ===== */
+/* FIX HEADER – KHÔNG BỊ MẤT KHI SCROLL */
+.navbar-custom {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 99999;
+    background-color: #2c3e50;
+}
+
+/* Chừa chỗ cho header, tránh bị nội dung đè */
+body {
+    padding-top: 60px;
+    background: #f3f6fb;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* HERO SECTION  */
 .contact-hero {
-    background: linear-gradient(90deg, #007bff, #00c6ff);
-    padding: 80px 0;
+    position: relative;
+    padding: 90px 0;
+    background: url("/images/contact_heading.jpg") center/cover no-repeat;
     text-align: center;
-    color: #fff;
+}
+
+.contact-hero .container {
+    position: relative;
+    max-width: 520px;
+    padding: 32px 28px;
+    border-radius: 14px;
+    background: rgba(255,255,255,.08);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
 
 .contact-hero h1 {
-    font-size: 38px;
+    font-size: 32px;
     font-weight: 700;
+    color: #fff;
 }
 
 .contact-hero p {
-    font-size: 18px;
-    margin-top: 10px;
+    font-size: 15px;
+    color: #e5e7eb;
+    margin: 0;
 }
-
 /* ===== CONTACT INFO SECTION ===== */
 .contact-info-section {
     background: #f2f6fc; /* màu nền nhẹ, phân tách rõ */
@@ -127,3 +155,48 @@
     background: #ff8e21;
 }
 
+/* ================= CHAT SIDEBAR ================= */
+.chat-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 360px;
+    height: 100vh;
+    background: white;
+    box-shadow: -5px 0 25px rgba(0,0,0,0.25);
+    transform: translateX(100%);
+    transition: 0.3s;
+    z-index: 10000; /* FIX đè header */
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-sidebar.open {
+    transform: translateX(0);
+}
+
+/* HEADER */
+.sidebar-header {
+    background: #0084ff;
+    color: white;
+    padding: 16px;
+}
+
+/* CONTACT LIST */
+.contacts-list {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* ITEM */
+.contact-item {
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.contact-item:hover {
+    background: #f5f5f5;
+}

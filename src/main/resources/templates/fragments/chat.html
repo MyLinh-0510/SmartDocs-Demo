@@ -1,0 +1,85 @@
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<div th:fragment="chat">
+
+    <div id="chatSidebarMain" class="chat-sidebar">
+
+        <!-- ===== LIST ===== -->
+        <div id="chatListView" style="display:flex; flex-direction:column; height:100%;">
+
+            <div class="sidebar-header d-flex justify-content-between align-items-center">
+                <div>💬 <b>Đoạn chat</b></div>
+                <button class="close-chat-btn" onclick="toggleChatSidebar()">✕</button>
+            </div>
+
+            <input id="chatSearchInputMain" placeholder="Tìm kiếm..." />
+
+            <div id="recentContactsListMain" class="contacts-list"></div>
+        </div>
+
+        <!-- ===== CHAT ===== -->
+        <div id="chatBoxView" style="display:none; flex-direction:column; height:100%;">
+
+            <!-- HEADER -->
+            <div class="sidebar-header chat-header">
+                <button onclick="backToList()">←</button>
+
+                <img id="chatAvatar" src="/uploads/avatars/default.jpg" class="header-avatar-img">
+
+                <div class="chat-header-info">
+                    <div id="chatTitle"></div>
+                    <small class="status">● Đang hoạt động</small>
+                </div>
+            </div>
+
+            <!-- MESSAGE -->
+            <div id="chatMessages"></div>
+
+            <!-- PREVIEW FILE -->
+            <div id="previewContainer" style="display:none;"></div>
+
+            <!-- INPUT -->
+            <div class="chat-input">
+
+                <!-- upload hỗ trợ nhiều file -->
+                <label class="upload-btn" title="Chọn nhiều ảnh hoặc file">
+                    📎
+                    <input type="file"
+                           id="fileInput"
+                           hidden
+                           multiple
+                           accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                           onchange="handleMultipleFileSelect(event)">
+                </label>
+
+                <input id="chatTextInputMain" placeholder="Nhắn tin..." />
+
+                <button onclick="sendMessageFromModal()" class="send-btn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script th:inline="javascript">
+        window.CURRENT_USER_EMAIL = /*[[${#authentication.name}]]*/ "";
+    </script>
+
+    <!-- IMAGE POPUP -->
+    <div id="imagePopup" class="image-popup" onclick="if(event.target.id === 'imagePopup') hideImagePopup()">
+        <div class="popup-content">
+            <span class="popup-close" onclick="hideImagePopup()">✕</span>
+
+            <button id="prevBtn" class="nav-btn" onclick="prevImage()">‹</button>
+
+            <img id="popupImage" src="" alt="Ảnh lớn">
+
+            <button id="nextBtn" class="nav-btn" onclick="nextImage()">›</button>
+        </div>
+    </div>
+
+</div>
