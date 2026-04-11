@@ -31,6 +31,33 @@ function connectWS() {
         stompClient.subscribe("/user/queue/messages", (msg) => {
             const m = JSON.parse(msg.body);
 
+            // nếu đã tồn tại → update thay vì append
+            const existing = document.querySelector(`[data-id='${m.id}']`);
+
+            if (existing) {
+                const bubble = existing.querySelector(".msg-bubble");
+
+                if (m.deleted) {
+                    bubble.innerText = "tin nhắn đã bị xóa";
+                    bubble.classList.add("deleted");
+                } else {
+                    bubble.innerText = m.content;
+                }
+
+                // update trạng thái edited
+                let meta = existing.querySelector(".msg-meta");
+                if (m.edited) {
+                    if (!meta) {
+                        meta = document.createElement("div");
+                        meta.className = "msg-meta";
+                        existing.querySelector(".msg-wrapper").prepend(meta);
+                    }
+                    meta.innerText = "(đã sửa)";
+                }
+
+                return; // ❗ không append nữa
+            }
+
             const isMine = m.senderEmail &&
                 m.senderEmail.trim().toLowerCase() === CURRENT_USER_EMAIL;
 
@@ -68,11 +95,24 @@ function connectWS() {
 // ================= TOGGLE SIDEBAR =================
 function toggleChatSidebar() {
     const sidebar = document.getElementById("chatSidebarMain");
+    const overlay = document.getElementById("chatOverlay");
+
     sidebar.classList.toggle("open");
 
     if (sidebar.classList.contains("open")) {
+        overlay.classList.add("show");
         loadRecentContacts();
+    } else {
+        overlay.classList.remove("show");
     }
+}
+
+function closeChatSidebar() {
+    const sidebar = document.getElementById("chatSidebarMain");
+    const overlay = document.getElementById("chatOverlay");
+
+    sidebar.classList.remove("open");
+    overlay.classList.remove("show");
 }
 
 // ================= LOAD & RENDER CONTACT =================
@@ -553,54 +593,84 @@ function toggleMenu(icon) {
 function editMessage(el) {
 
     const msgDiv = el.closest(".msg-user");
-
     if (!msgDiv) return;
 
     const wrapper = el.closest(".msg-wrapper");
     const bubble = wrapper.querySelector(".msg-bubble");
-    const meta = wrapper.querySelector(".msg-meta");
+
+    let meta = wrapper.querySelector(".msg-meta");
+    if (!meta) {
+        meta = document.createElement("div");
+        meta.className = "msg-meta";
+        wrapper.prepend(meta);
+    }
 
     const oldText = bubble.innerText;
+
+    // tránh mở nhiều lần
+    if (bubble.querySelector("input")) return;
 
     bubble.innerHTML = `<input class="edit-input" value="${oldText}">`;
 
     const input = bubble.querySelector("input");
     input.focus();
+    input.select();
 
-    input.addEventListener("keydown", function(e) {
-        if (e.key === "Enter") save();
-    });
-
-    input.addEventListener("blur", save);
-
+    // ===== SAVE =====
     function save() {
+        const newText = input.value.trim();
 
-        let newText = input.value.trim();
-
-        if (!newText) {
+        // nếu không đổi → revert
+        if (!newText || newText === oldText) {
             bubble.innerText = oldText;
             return;
         }
 
+        // 🔥 OPTIMISTIC UI (update ngay)
         bubble.innerText = newText;
-        meta.innerHTML = "(đã sửa)";
+        meta.innerText = "(đã sửa)";
 
-        const messageId = msgDiv?.dataset?.id;
+        const messageId = msgDiv.dataset.id;
 
-        if (messageId) {
-            fetch("/chat/edit", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    [csrfHeader]: csrfToken
-                },
-                body: JSON.stringify({
-                    id: messageId,
-                    content: newText
-                })
-            });
-        }
+        fetch("/chat/edit", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({
+                id: messageId,
+                content: newText
+            })
+        }).catch(() => {
+            // ❌ nếu lỗi → rollback
+            bubble.innerText = oldText;
+            meta.innerText = "";
+            alert("Lưu thất bại!");
+        });
     }
+
+    // ===== CANCEL =====
+    function cancel() {
+        bubble.innerText = oldText;
+    }
+
+    // ===== EVENTS =====
+    input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            save();
+        }
+        if (e.key === "Escape") {
+            cancel();
+        }
+    });
+
+    // click ra ngoài → cancel
+    input.addEventListener("blur", cancel);
+
+    // đóng menu
+    document.querySelectorAll(".msg-menu").forEach(m => m.classList.remove("show"));
 }
 
 // xóa tin nhắn
@@ -679,6 +749,16 @@ function appendTimeDivider(date) {
 // ================= INIT =================
 window.addEventListener("load", () => {
     connectWS();
+});
+
+document.addEventListener("click", function(e) {
+
+    // nếu KHÔNG click vào vùng action (dấu 3 chấm + menu)
+    if (!e.target.closest(".msg-actions")) {
+        document.querySelectorAll(".msg-menu")
+            .forEach(m => m.classList.remove("show"));
+    }
+
 });
 
 // Expose các hàm ra global để HTML gọi được

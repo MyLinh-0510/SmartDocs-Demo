@@ -120,8 +120,7 @@ public class ContactMessageController {
 
             dto.setSenderEmail(m.getSenderEmail());
 
-            // ✅ FIX QUAN TRỌNG
-            dto.setReceiverEmail(m.getReceiverEmail()); // ⬅️ phải là receiverEmail
+            dto.setReceiverEmail(m.getReceiverEmail());
 
             dto.setContent(m.getContent());
 
@@ -228,7 +227,7 @@ public class ContactMessageController {
                 Path uploadPath = Paths.get(WebConfig.UPLOAD_ROOT + subFolder);
                 Files.createDirectories(uploadPath);
 
-                // ✅ tên file không trùng
+                // tên file không trùng
                 String finalName = getUniqueFileName(uploadPath, originalName);
 
                 Path savedPath = uploadPath.resolve(finalName);
@@ -238,17 +237,17 @@ public class ContactMessageController {
 
                 viewUrls.add(url);
                 downloadUrls.add(url);
-                fileNames.add(finalName); // 👉 dùng tên thật đã xử lý
+                fileNames.add(finalName);
             }
 
-            // ==================== FILE ====================
+            // file
             else {
 
                 String subFolder = "chat/files/";
                 Path uploadPath = Paths.get(WebConfig.UPLOAD_ROOT + subFolder);
                 Files.createDirectories(uploadPath);
 
-                // 👉 tên file gốc (giữ nguyên + unique)
+                // tên file gốc (giữ nguyên + unique)
                 String finalName = getUniqueFileName(uploadPath, originalName);
 
                 Path savedPath = uploadPath.resolve(finalName);
@@ -259,13 +258,13 @@ public class ContactMessageController {
                 Path pdfPath = Paths.get(WebConfig.UPLOAD_ROOT + pdfFolder);
                 Files.createDirectories(pdfPath);
 
-                // 👉 tạo tên PDF tương ứng
+                // tạo tên PDF tương ứng
                 String baseName = finalName.replaceAll("\\.[^.]+$", "");
                 String pdfName = getUniqueFileName(pdfPath, baseName + ".pdf");
 
                 Path pdfFilePath = pdfPath.resolve(pdfName);
 
-                // 👉 convert TRỰC TIẾP ra file này
+                // convert TRỰC TIẾP ra file này
                 fileConvertService.convertToPdfExact(
                         savedPath.toAbsolutePath().toString(),
                         pdfFilePath.toAbsolutePath().toString()
@@ -291,7 +290,7 @@ public class ContactMessageController {
 
     private String getUniqueFileName(Path dir, String originalName) throws Exception {
 
-        // 👉 giữ nguyên tên, chỉ replace ký tự nguy hiểm
+        // giữ nguyên tên, chỉ replace ký tự nguy hiểm
         String safeName = originalName.replaceAll("[\\\\/:*?\"<>|]", "_");
 
         Path filePath = dir.resolve(safeName);
@@ -320,11 +319,64 @@ public class ContactMessageController {
 
     @PostMapping("/chat/edit")
     public ResponseEntity<?> editMessage(@RequestBody ChatMessageDTO dto, Principal principal) {
+
+        String myEmail = principal.getName();
+
+        ContactMessage msg = messageRepo.findById(dto.getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tin nhắn"));
+
+        // chỉ cho sửa tin của chính mình
+        if (!msg.getSenderEmail().equals(myEmail)) {
+            return ResponseEntity.status(403).body("Không có quyền sửa");
+        }
+
+        // cập nhật nội dung
+        msg.setContent(dto.getContent());
+        msg.setEdited(true);
+
+        messageRepo.save(msg);
+
+        // gửi realtime update lại cho 2 bên
+        ChatMessageDTO response = new ChatMessageDTO();
+        response.setId(msg.getId());
+        response.setSenderEmail(msg.getSenderEmail());
+        response.setRecipientEmail(msg.getReceiverEmail());
+        response.setContent(msg.getContent());
+        response.setEdited(true);
+        response.setDeleted(false);
+        response.setTimestamp(msg.getCreatedAt());
+
+        messagingTemplate.convertAndSendToUser(msg.getReceiverEmail(), "/queue/messages", response);
+        messagingTemplate.convertAndSendToUser(msg.getSenderEmail(), "/queue/messages", response);
+
         return ResponseEntity.ok("OK");
     }
 
     @PostMapping("/chat/delete")
     public ResponseEntity<?> deleteMessage(@RequestBody ChatMessageDTO dto, Principal principal) {
+
+        String myEmail = principal.getName();
+
+        ContactMessage msg = messageRepo.findById(dto.getId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tin nhắn"));
+
+        if (!msg.getSenderEmail().equals(myEmail)) {
+            return ResponseEntity.status(403).body("Không có quyền xóa");
+        }
+
+        msg.setDeleted(true);
+        messageRepo.save(msg);
+
+        ChatMessageDTO response = new ChatMessageDTO();
+        response.setId(msg.getId());
+        response.setSenderEmail(msg.getSenderEmail());
+        response.setRecipientEmail(msg.getReceiverEmail());
+        response.setDeleted(true);
+        response.setTimestamp(msg.getCreatedAt());
+
+        messagingTemplate.convertAndSendToUser(msg.getReceiverEmail(), "/queue/messages", response);
+        messagingTemplate.convertAndSendToUser(msg.getSenderEmail(), "/queue/messages", response);
+
         return ResponseEntity.ok("OK");
     }
 }
