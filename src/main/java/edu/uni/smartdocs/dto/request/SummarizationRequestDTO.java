@@ -1,4 +1,4 @@
-package edu.uni.smartdocs.dto;
+package edu.uni.smartdocs.dto.request;
 
 import lombok.*;
 

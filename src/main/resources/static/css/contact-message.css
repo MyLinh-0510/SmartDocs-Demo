@@ -92,7 +92,7 @@
 }
 
 /* ================= CHAT ================= */
-#chatMessages {
+#contactMesages {
     flex: 1;
     overflow-y: auto;
     padding: 12px;
@@ -483,11 +483,11 @@
 }
 
 /* ================= SCROLL ================= */
-#chatMessages::-webkit-scrollbar {
+#contactMesages::-webkit-scrollbar {
     width: 6px;
 }
 
-#chatMessages::-webkit-scrollbar-thumb {
+#contactMesages::-webkit-scrollbar-thumb {
     background: #ccc;
     border-radius: 10px;
 }

@@ -12,27 +12,87 @@
     <link th:href="@{/css/table_button.css}" rel="stylesheet">
 
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; }
-        #wrapper { display: flex; min-height: 100vh; }
-        .main-content { flex: 1; padding: 30px; background-color: #fff; }
-        .main-content h2 { text-align: center; margin-bottom: 30px; font-weight: 600; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f6f8;
+        }
 
-        .table-wrapper { margin-top: 20px; }
+        #wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
 
-        .pagination { margin: 0; font-size: 14px; }
-        .pagination .page-link { padding: 6px 12px; border-radius: 6px; }
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            background-color: #fff;
+        }
 
-        .reply-preview {
-            max-width: 220px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .main-content h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .table-wrapper {
+            margin-top: 20px;
+        }
+
+        table {
+            table-layout: fixed;
+        }
+
+        .pagination {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .pagination .page-link {
+            padding: 6px 12px;
+            border-radius: 6px;
         }
 
         .action-buttons {
             display: flex;
             gap: 8px;
         }
+
+        /* ====== FIX WIDTH COLUMNS ====== */
+
+        /* ID nhỏ gọn */
+        .col-id {
+            width: 70px;
+            max-width: 70px;
+            text-align: center;
+        }
+
+        /* Name hiển thị full */
+        .col-name {
+            width: 180px;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        /* Nội dung */
+        .col-message {
+            width: 260px;
+            max-width: 260px;
+        }
+
+        /* Admin reply */
+        .col-reply {
+            width: 220px;
+            max-width: 220px;
+        }
+
+        /* Ellipsis dùng cho nội dung dài */
+        .text-ellipsis {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
     </style>
 </head>
 
@@ -76,42 +136,30 @@
 
         </form>
 
-        <!-- Phân trang  -->
+        <!-- PAGINATION -->
         <div class="d-flex justify-content-end mb-3"
              th:if="${contacts.totalPages > 1}">
             <nav>
                 <ul class="pagination pagination-sm">
 
-                    <!-- Previous -->
                     <li class="page-item"
                         th:classappend="${contacts.number == 0} ? 'disabled'">
                         <a class="page-link"
-                           th:href="@{/admin/contact/index(
-                            page=${contacts.number - 1},
-                            size=${contacts.size}
-                       )}">«</a>
+                           th:href="@{/admin/contact/index(page=${contacts.number - 1}, size=${contacts.size})}">«</a>
                     </li>
 
-                    <!-- Page numbers -->
                     <li class="page-item"
                         th:each="i : ${#numbers.sequence(0, contacts.totalPages - 1)}"
                         th:classappend="${i == contacts.number} ? 'active'">
                         <a class="page-link"
                            th:text="${i + 1}"
-                           th:href="@{/admin/contact/index(
-                            page=${i},
-                            size=${contacts.size}
-                       )}"></a>
+                           th:href="@{/admin/contact/index(page=${i}, size=${contacts.size})}"></a>
                     </li>
 
-                    <!-- Next -->
                     <li class="page-item"
                         th:classappend="${contacts.number + 1 == contacts.totalPages} ? 'disabled'">
                         <a class="page-link"
-                           th:href="@{/admin/contact/index(
-                            page=${contacts.number + 1},
-                            size=${contacts.size}
-                       )}">»</a>
+                           th:href="@{/admin/contact/index(page=${contacts.number + 1}, size=${contacts.size})}">»</a>
                     </li>
 
                 </ul>
@@ -124,10 +172,10 @@
 
                 <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Người gửi</th>
-                    <th>Nội dung</th>
-                    <th>Trả lời admin</th>
+                    <th class="col-id">ID</th>
+                    <th class="col-name">Người gửi</th>
+                    <th class="col-message">Nội dung</th>
+                    <th class="col-reply">Trả lời admin</th>
                     <th>Ngày nhận</th>
                     <th>Trạng thái</th>
                     <th>Hành động</th>
@@ -137,20 +185,25 @@
                 <tbody>
 
                 <tr th:each="c : ${contacts.content}">
-                    <td th:text="${c.id}"></td>
+                    <td class="col-id" th:text="${c.id}"></td>
 
-                    <td th:text="${c.name}"></td>
+                    <!-- ✅ NAME FULL -->
+                    <td class="col-name" th:text="${c.name}"></td>
 
-                    <td th:text="${c.message != null && c.message.length() > 50
-                        ? c.message.substring(0,50) + '...'
-                        : c.message}"></td>
+                    <!-- MESSAGE -->
+                    <td class="col-message">
+                        <div class="text-ellipsis"
+                             th:text="${c.message}"
+                             th:title="${c.message}">
+                        </div>
+                    </td>
 
-                    <td>
-                        <span class="reply-preview"
-                              th:text="${c.adminReply != null
-                                ? (c.adminReply.length() > 40 ? c.adminReply.substring(0,40) + '...' : c.adminReply)
-                                : '—'}">
-                        </span>
+                    <!-- ADMIN REPLY -->
+                    <td class="col-reply">
+                        <div class="text-ellipsis"
+                             th:text="${c.adminReply != null ? c.adminReply : '—'}"
+                             th:title="${c.adminReply}">
+                        </div>
                     </td>
 
                     <td th:text="${#temporals.format(c.createdAt, 'dd/MM/yyyy HH:mm')}"></td>

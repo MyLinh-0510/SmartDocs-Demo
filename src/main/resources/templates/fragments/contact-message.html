@@ -1,7 +1,7 @@
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<div th:fragment="chat">
+<div th:fragment="contact-message">
 
     <div id="chatOverlay" class="chat-overlay" onclick="closeChatSidebar()"></div>
 
@@ -36,7 +36,7 @@
             </div>
 
             <!-- MESSAGE -->
-            <div id="chatMessages"></div>
+            <div id="contactMesages"></div>
 
             <!-- PREVIEW FILE -->
             <div id="previewContainer" style="display:none;"></div>

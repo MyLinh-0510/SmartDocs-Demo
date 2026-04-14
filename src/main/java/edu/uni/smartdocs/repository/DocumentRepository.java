@@ -185,4 +185,13 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 """)
     Long findMaxSoVBNumberByYear(int year);
 
+    // Tìm kiếm theo title hoặc description (không phân biệt hoa thường)
+    List<Document> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String title, String description);
+
+    // Tìm kiếm theo title
+    List<Document> findByTitleContainingIgnoreCase(String title);
+
+    // Tìm kiếm theo description
+    List<Document> findByDescriptionContainingIgnoreCase(String description);
+
 }

@@ -1,8 +1,9 @@
 package edu.uni.smartdocs.models;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,8 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ChatMessage {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,10 +37,14 @@ public class ChatMessage {
     private String referencedDocumentIds;       // "[1,5,12]"
 
     @Column(columnDefinition = "JSON")
-    private String referencedDocumentsInfo;     // chi tiết hơn (tùy chọn)
+    private String referencedDocumentsInfo;     // chi tiết hơn
 
     @Column(name = "session_id", length = 100)
     private String sessionId;
+
+    // 🟢 THÊM TRƯỜNG NÀY - ĐẶT TÊN CHO CUỘC TRÒ CHUYỆN
+    @Column(name = "session_name", length = 255)
+    private String sessionName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -53,12 +60,26 @@ public class ChatMessage {
         }
     }
 
-    // Helper method
+    // Helper: Lấy danh sách document IDs từ JSON
     public List<Long> getReferencedDocumentIdList() {
         if (referencedDocumentIds == null || referencedDocumentIds.trim().isEmpty()) {
             return new ArrayList<>();
         }
-        // TODO: Sử dụng ObjectMapper để parse JSON thành List<Long>
-        return new ArrayList<>();
+        try {
+            return objectMapper.readValue(referencedDocumentIds, new TypeReference<List<Long>>() {});
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    // Helper: Lưu danh sách document IDs thành JSON
+    public void setReferencedDocumentIdList(List<Long> documentIds) {
+        try {
+            this.referencedDocumentIds = objectMapper.writeValueAsString(documentIds);
+        } catch (Exception e) {
+            e.printStackTrace();
+            this.referencedDocumentIds = "[]";
+        }
     }
 }

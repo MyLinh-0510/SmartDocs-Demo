@@ -159,7 +159,7 @@ function openChat(email, name, avatar) {
     document.getElementById("chatTitle").innerText = name;
     document.getElementById("chatAvatar").src = "/uploads/avatars/" + (avatar || "default.jpg");
 
-    const box = document.getElementById("chatMessages");
+    const box = document.getElementById("contactMesages");
     box.innerHTML = "đang tải...";
 
     fetch("/chat/history?email=" + email)
@@ -210,7 +210,7 @@ searchInput.addEventListener("input", function () {
 
 // ================= RENDER LỊCH SỬ TIN NHẮN =================
 function renderMessages(messages) {
-    const box = document.getElementById("chatMessages");
+    const box = document.getElementById("contactMesages");
     box.innerHTML = "";
 
     if (!messages || messages.length === 0) {
@@ -254,7 +254,7 @@ function appendMessage(content, isMine, messageId = null, edited = false, delete
                        fileUrls = null, fileNames = null,
                        viewUrls = null, downloadUrls = null) {   // thêm 2 tham số mới
 
-    const box = document.getElementById("chatMessages");
+    const box = document.getElementById("contactMesages");
     const isAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
 
     const div = document.createElement("div");
@@ -375,7 +375,7 @@ async function handleMultipleFileSelect(e) {
     const files = Array.from(e.target.files);
     if (files.length === 0 || !currentRecipientEmail) return;
 
-    const box = document.getElementById("chatMessages");
+    const box = document.getElementById("contactMesages");
 
     const loadingDiv = document.createElement("div");
     loadingDiv.id = "uploadProgress";
@@ -728,7 +728,7 @@ window.downloadOriginalFile = function(el) {
 // hiển thị mốc thời gian
 function appendTimeDivider(date) {
 
-    const box = document.getElementById("chatMessages");
+    const box = document.getElementById("contactMesages");
 
     const div = document.createElement("div");
     div.className = "msg-time-divider";

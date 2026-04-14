@@ -15,6 +15,13 @@ body {
     margin-top: 60px;
 }
 
+.history-message {
+    max-width: 300px;     /* chỉnh theo layout của bạn */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* ===== TABLE STYLE ===== */
 .table-custom {
     background: #fff;

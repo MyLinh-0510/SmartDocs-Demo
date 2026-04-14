@@ -42,6 +42,9 @@ public class Document {
     @Column(name = "is_visible", nullable = false)
     private boolean isVisible = true;
 
+    @Column(columnDefinition = "LONGTEXT")  // Lưu text lớn
+    private String extractedText;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(

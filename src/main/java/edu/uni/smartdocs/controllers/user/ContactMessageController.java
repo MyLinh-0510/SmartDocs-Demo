@@ -1,7 +1,7 @@
 package edu.uni.smartdocs.controllers.user;
 
 import edu.uni.smartdocs.config.WebConfig;
-import edu.uni.smartdocs.dto.ChatMessageDTO;
+import edu.uni.smartdocs.dto.ContactMessageDTO;
 import edu.uni.smartdocs.dto.RecentContactDTO;
 import edu.uni.smartdocs.models.ContactMessage;
 import edu.uni.smartdocs.models.MessageType;
@@ -106,7 +106,7 @@ public class ContactMessageController {
     // ==================== 3. HISTORY ====================
     @GetMapping("/chat/history")
     @ResponseBody
-    public List<ChatMessageDTO> getHistory(@RequestParam String email, Principal principal) {
+    public List<ContactMessageDTO> getHistory(@RequestParam String email, Principal principal) {
 
         String myEmail = principal.getName();
 
@@ -114,7 +114,7 @@ public class ContactMessageController {
 
         return messages.stream().map(m -> {
 
-            ChatMessageDTO dto = new ChatMessageDTO();
+            ContactMessageDTO dto = new ContactMessageDTO();
 
             dto.setId(m.getId());
 
@@ -158,7 +158,7 @@ public class ContactMessageController {
 
     // ==================== 4. SEND MESSAGE ====================
     @MessageMapping("/chat.send")
-    public void send(@Payload ChatMessageDTO dto, Principal principal) {
+    public void send(@Payload ContactMessageDTO dto, Principal principal) {
         String sender = principal.getName();
         String receiver = dto.getRecipientEmail();
         if (receiver == null || receiver.trim().isEmpty()) return;
@@ -181,7 +181,7 @@ public class ContactMessageController {
 
         messageRepo.save(msg);
 
-        ChatMessageDTO response = new ChatMessageDTO();
+        ContactMessageDTO response = new ContactMessageDTO();
         response.setId(msg.getId());
         response.setSenderEmail(sender);
         response.setRecipientEmail(receiver);
@@ -318,7 +318,7 @@ public class ContactMessageController {
     }
 
     @PostMapping("/chat/edit")
-    public ResponseEntity<?> editMessage(@RequestBody ChatMessageDTO dto, Principal principal) {
+    public ResponseEntity<?> editMessage(@RequestBody ContactMessageDTO dto, Principal principal) {
 
         String myEmail = principal.getName();
 
@@ -337,7 +337,7 @@ public class ContactMessageController {
         messageRepo.save(msg);
 
         // gửi realtime update lại cho 2 bên
-        ChatMessageDTO response = new ChatMessageDTO();
+        ContactMessageDTO response = new ContactMessageDTO();
         response.setId(msg.getId());
         response.setSenderEmail(msg.getSenderEmail());
         response.setRecipientEmail(msg.getReceiverEmail());
@@ -353,7 +353,7 @@ public class ContactMessageController {
     }
 
     @PostMapping("/chat/delete")
-    public ResponseEntity<?> deleteMessage(@RequestBody ChatMessageDTO dto, Principal principal) {
+    public ResponseEntity<?> deleteMessage(@RequestBody ContactMessageDTO dto, Principal principal) {
 
         String myEmail = principal.getName();
 
@@ -367,7 +367,7 @@ public class ContactMessageController {
         msg.setDeleted(true);
         messageRepo.save(msg);
 
-        ChatMessageDTO response = new ChatMessageDTO();
+        ContactMessageDTO response = new ContactMessageDTO();
         response.setId(msg.getId());
         response.setSenderEmail(msg.getSenderEmail());
         response.setRecipientEmail(msg.getReceiverEmail());

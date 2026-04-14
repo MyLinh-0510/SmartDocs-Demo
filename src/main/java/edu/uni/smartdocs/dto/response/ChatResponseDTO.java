@@ -1,5 +1,6 @@
-package edu.uni.smartdocs.dto;
+package edu.uni.smartdocs.dto.response;
 
+import edu.uni.smartdocs.dto.RelatedDocumentDTO;
 import lombok.*;
 
 import java.util.List;

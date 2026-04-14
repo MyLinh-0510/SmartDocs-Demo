@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatMessageDTO {
+public class ContactMessageDTO {
     private Long id;
     private boolean edited;
     private Long contactId;

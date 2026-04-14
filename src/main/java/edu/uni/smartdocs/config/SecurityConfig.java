@@ -59,7 +59,7 @@ public class SecurityConfig {
 
         http
 
-                .securityMatcher("/user/**", "/", "/chat/**")
+                .securityMatcher("/user/**", "/", "/chat/**","/api/semantic-search/**")
                 .authenticationProvider(authenticationProvider())
 
                 .csrf(csrf -> csrf
@@ -69,7 +69,9 @@ public class SecurityConfig {
                                 "/user/document-action/**",
                                 "/api/notifications/**",
                                 "/user/share/**",
-                                "/share/**"
+                                "/share/**",
+                                "/api/semantic-search/**",
+                                "/api/chat/**"
                         )
                 )
 
@@ -79,6 +81,8 @@ public class SecurityConfig {
                         .requestMatchers("/", "/user/account/login").permitAll()   // Cho phép root và login user
                         .requestMatchers("/chat/**").hasAnyRole("EMPLOYEE", "CEO")
                         .requestMatchers("/user/**").hasAnyRole("EMPLOYEE", "CEO")
+                        .requestMatchers("/api/semantic-search/**").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
@@ -130,7 +134,9 @@ public class SecurityConfig {
                                 "/user/document-action/**",
                                 "/api/notifications/**",
                                 "/user/share/**",
-                                "/share/**"
+                                "/share/**",
+                                "/api/semantic-search/**",
+                                "/api/chat/**"
                         )
                 )
 
@@ -146,6 +152,9 @@ public class SecurityConfig {
 
                         .requestMatchers("/share/**", "/view/pdf/**", "/user/pdf-preview/**", "/uploads/**").permitAll()
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+
+                        .requestMatchers("/api/semantic-search/**").permitAll()
+                        .requestMatchers("/api/chat/**").permitAll()
 
                         .requestMatchers("/api/notifications/**").hasAnyRole("EMPLOYEE", "CEO")
                         .requestMatchers("/api/**").hasRole("ADMIN")

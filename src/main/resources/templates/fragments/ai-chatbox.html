@@ -1,0 +1,266 @@
+<div th:fragment="ai-chatbox">
+
+  <!-- Nút chat AI -->
+  <div class="smartdocs-ai-floating-btn" id="aiChatFloatingBtn">🤖</div>
+
+  <!-- Chat window AI -->
+  <div class="smartdocs-ai-chat-window" id="aiChatWindow">
+    <div class="smartdocs-ai-chat-header">
+
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button id="toggleSidebarBtn" class="toggle-sidebar-btn">☰</button>
+        <span>🤖 SmartDocs AI Assistant</span>
+      </div>
+
+      <span id="aiCloseChatBtn" style="cursor:pointer;">✕</span>
+    </div>
+
+    <div class="smartdocs-ai-chat-main-area">
+
+      <!-- Sidebar -->
+      <div class="smartdocs-ai-chat-sidebar">
+
+        <button class="smartdocs-ai-new-chat-btn" id="aiNewChatBtn">
+          + Cuộc trò chuyện mới
+        </button>
+
+        <!-- 🔍 SEARCH (đã đặt đúng vị trí) -->
+        <div class="smartdocs-ai-search-box">
+          <input
+                  type="text"
+                  id="aiSearchInput"
+                  placeholder="🔍 Tìm cuộc trò chuyện..."
+          >
+        </div>
+
+        <div class="smartdocs-ai-session-list" id="aiSessionList"></div>
+      </div>
+
+      <!-- Right Panel -->
+      <div class="smartdocs-ai-chat-right-panel">
+        <div class="smartdocs-ai-chat-messages" id="aiChatMessages">
+
+          <div class="smartdocs-ai-message bot">
+            <div class="smartdocs-ai-message-bubble">
+              👋 Chào bạn! Tôi là trợ lý AI của SmartDocs.<br>
+              Hãy hỏi tôi về tài liệu, hợp đồng, văn bản nhé!
+            </div>
+          </div>
+
+        </div>
+
+        <div class="smartdocs-ai-chat-input-area">
+          <input type="text" id="aiQuestionInput" placeholder="Nhập câu hỏi của bạn...">
+          <button id="aiSendBtn">Gửi</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    const currentUserId = /*[[${session.user != null ? session.user.id : 1}]]*/ 1;
+    /*]]>*/
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+      const floatingBtn     = document.getElementById('aiChatFloatingBtn');
+      const chatWindow      = document.getElementById('aiChatWindow');
+      const closeBtn        = document.getElementById('aiCloseChatBtn');
+      const sendBtn         = document.getElementById('aiSendBtn');
+      const questionInput   = document.getElementById('aiQuestionInput');
+      const chatMessages    = document.getElementById('aiChatMessages');
+      const newChatBtn      = document.getElementById('aiNewChatBtn');
+      const sessionListDiv  = document.getElementById('aiSessionList');
+      const searchInput     = document.getElementById('aiSearchInput');
+      const toggleBtn       = document.getElementById('toggleSidebarBtn');
+
+      let allSessions = [];
+
+      let currentSessionId = localStorage.getItem('ai_chat_session_id') ||
+              'ai_session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+      localStorage.setItem('ai_chat_session_id', currentSessionId);
+
+      // ==================== TOGGLE SIDEBAR ====================
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          chatWindow.classList.toggle('sidebar-hidden');
+        });
+      }
+
+      // ==================== HÀM CHUNG ====================
+      function formatTime() {
+        return new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function addMessageToUI(content, isUser, timestamp) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `smartdocs-ai-message ${isUser ? 'user' : 'bot'}`;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'smartdocs-ai-message-bubble';
+        bubble.innerHTML = content.replace(/\n/g, '<br>');
+
+
+        messageDiv.appendChild(bubble);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function showTyping() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'smartdocs-ai-message bot';
+        typingDiv.id = 'aiTypingIndicator';
+        typingDiv.innerHTML = `
+          <div class="smartdocs-ai-message-bubble">
+            <div style="display:flex; gap:4px;">
+              <span style="width:8px;height:8px;background:#999;border-radius:50%;animation:ai-bounce 1.4s infinite;"></span>
+              <span style="width:8px;height:8px;background:#999;border-radius:50%;animation:ai-bounce 1.4s infinite 0.16s;"></span>
+              <span style="width:8px;height:8px;background:#999;border-radius:50%;animation:ai-bounce 1.4s infinite 0.32s;"></span>
+            </div>
+          </div>`;
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      function hideTyping() {
+        const typing = document.getElementById('aiTypingIndicator');
+        if (typing) typing.remove();
+      }
+
+      // ==================== API ====================
+      async function loadChatHistory() {
+        try {
+          const res = await fetch(`/api/chat/history?sessionId=${currentSessionId}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          chatMessages.innerHTML = '';
+          data.forEach(msg => {
+            addMessageToUI(msg.content, msg.role === 'USER', msg.timestamp);
+          });
+        } catch (e) {
+          console.error('Load history error:', e);
+        }
+      }
+
+      async function loadSessions() {
+        try {
+          const res = await fetch(`/api/chat/sessions?userId=${currentUserId}`);
+          const sessions = await res.json();
+
+          allSessions = sessions;
+          renderSessions(sessions);
+
+        } catch (e) {
+          console.error('Load sessions error:', e);
+        }
+      }
+
+      function renderSessions(sessions) {
+        sessionListDiv.innerHTML = '';
+
+        if (sessions && sessions.length > 0) {
+          sessions.forEach(s => {
+            const item = document.createElement('div');
+            item.className = `smartdocs-ai-session-item ${s.sessionId === currentSessionId ? 'active' : ''}`;
+            item.textContent = s.sessionName || 'Cuộc trò chuyện';
+            item.onclick = () => switchSession(s.sessionId);
+            sessionListDiv.appendChild(item);
+          });
+        } else {
+          sessionListDiv.innerHTML = '<div style="padding:10px;color:#999;text-align:center;">Không tìm thấy</div>';
+        }
+      }
+
+      // 🔍 SEARCH REALTIME
+      searchInput.addEventListener('input', () => {
+        const keyword = searchInput.value.toLowerCase();
+
+        const filtered = allSessions.filter(s =>
+                (s.sessionName || '').toLowerCase().includes(keyword)
+        );
+
+        renderSessions(filtered);
+      });
+
+      function switchSession(newId) {
+        if (newId === currentSessionId) return;
+        currentSessionId = newId;
+        localStorage.setItem('ai_chat_session_id', currentSessionId);
+        chatMessages.innerHTML = '';
+        loadChatHistory();
+        loadSessions();
+      }
+
+      function newChat() {
+        currentSessionId = 'ai_session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('ai_chat_session_id', currentSessionId);
+        chatMessages.innerHTML = `
+          <div class="smartdocs-ai-message bot">
+            <div class="smartdocs-ai-message-bubble">
+              👋 Chào bạn! Tôi là trợ lý AI của SmartDocs.<br>
+              Hãy hỏi tôi về tài liệu nhé!
+            </div>
+          </div>`;
+        loadSessions();
+      }
+
+      async function sendMessage() {
+        const question = questionInput.value.trim();
+        if (!question) return;
+
+        addMessageToUI(question, true);
+        questionInput.value = '';
+        showTyping();
+
+        try {
+          const res = await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: question,
+              userId: currentUserId,
+              sessionId: currentSessionId
+            })
+          });
+
+          const data = await res.json();
+          hideTyping();
+
+          addMessageToUI(data.content || '❌ Lỗi', false);
+          loadSessions();
+
+        } catch (err) {
+          hideTyping();
+          addMessageToUI('❌ Lỗi server', false);
+        }
+      }
+
+      // ==================== EVENTS ====================
+      floatingBtn.onclick = () => {
+        const isShown = chatWindow.classList.contains('show');
+
+        if (!isShown) {
+          chatWindow.classList.add('show');
+          loadChatHistory();
+          loadSessions();
+        } else {
+          chatWindow.classList.remove('show');
+        }
+      };
+
+      closeBtn.onclick = () => chatWindow.classList.remove('show');
+
+      sendBtn.onclick = sendMessage;
+
+      questionInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+      });
+
+      newChatBtn.onclick = newChat;
+
+    });
+  </script>
+</div>
