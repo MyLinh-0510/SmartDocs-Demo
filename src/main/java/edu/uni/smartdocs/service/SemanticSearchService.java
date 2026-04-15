@@ -8,6 +8,8 @@ import edu.uni.smartdocs.models.Document;
 import edu.uni.smartdocs.models.User;
 import edu.uni.smartdocs.models.MessageType;
 import edu.uni.smartdocs.models.DocumentStatus;
+import edu.uni.smartdocs.models.Category;
+import edu.uni.smartdocs.repository.CategoryRepository;
 import edu.uni.smartdocs.repository.ChatMessageRepository;
 import edu.uni.smartdocs.repository.DocumentRepository;
 import edu.uni.smartdocs.repository.UserRepository;
@@ -25,30 +27,145 @@ public class SemanticSearchService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
+    private final CategoryRepository categoryRepository;
 
-    // Danh sách các loại tài liệu hỗ trợ
-    private final List<String> supportedDocumentTypes = Arrays.asList(
-            "biểu mẫu", "bieu mau", "văn bản", "van ban", "hợp đồng", "hop dong",
-            "hóa đơn", "hoa don", "công văn", "cong van", "quyết định", "quyet dinh",
-            "thông báo", "thong bao", "biên bản", "bien ban", "báo cáo", "bao cao",
-            "kế hoạch", "ke hoach", "tờ trình", "to trinh", "chỉ thị", "chi thi",
-            "hướng dẫn", "huong dan", "quy chế", "quy che", "quy định", "quy dinh",
-            "chính sách", "chinh sach", "hồ sơ nhân sự", "ho so nhan su", "nhân sự",
-            "hồ sơ pháp lý", "ho so phap ly", "tài liệu đào tạo", "tai lieu dao tao", "đào tạo",
-            "tài liệu kỹ thuật", "tai lieu ky thuat", "kỹ thuật", "văn bản chưa duyệt",
-            "van ban chua duyet", "hợp đồng quan trọng", "hop dong quan trong"
-    );
+    // Cache cho danh sách category
+    private List<String> cachedDocumentTypes = null;
+    private List<Category> cachedCategories = null;
+    private long lastCacheTime = 0;
+    private static final long CACHE_DURATION = 60000; // 1 phút
 
     public SemanticSearchService(DocumentRepository documentRepository,
                                  ChatMessageRepository chatMessageRepository,
-                                 UserRepository userRepository) {
+                                 UserRepository userRepository,
+                                 CategoryRepository categoryRepository) {
         this.documentRepository = documentRepository;
         this.chatMessageRepository = chatMessageRepository;
         this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
         this.restTemplate = new RestTemplate();
     }
 
+    // ==================== LẤY DANH MỤC TỪ DATABASE ====================
+
+    /**
+     * Lấy danh sách tên category từ database (có cache)
+     */
+    private List<String> getSupportedDocumentTypes() {
+        // Kiểm tra cache
+        if (cachedDocumentTypes != null && (System.currentTimeMillis() - lastCacheTime) < CACHE_DURATION) {
+            return cachedDocumentTypes;
+        }
+
+        List<Category> categories = categoryRepository.findAll();
+        Set<String> typeNames = new HashSet<>();
+
+        for (Category category : categories) {
+            String name = category.getName().toLowerCase();
+            // Thêm tên gốc
+            typeNames.add(name);
+            // Thêm tên không dấu
+            String unsignName = removeDiacritics(name);
+            if (!unsignName.equals(name)) {
+                typeNames.add(unsignName);
+            }
+        }
+
+        // Thêm từ khóa mặc định (fallback nếu database rỗng)
+        if (typeNames.isEmpty()) {
+            typeNames.addAll(getDefaultKeywords());
+        }
+
+        cachedDocumentTypes = new ArrayList<>(typeNames);
+        lastCacheTime = System.currentTimeMillis();
+
+        System.out.println("📚 Đã load " + cachedDocumentTypes.size() + " loại tài liệu từ database");
+        return cachedDocumentTypes;
+    }
+
+    /**
+     * Lấy danh sách category đầy đủ từ database (có cache)
+     */
+    private List<Category> getCategories() {
+        if (cachedCategories != null && (System.currentTimeMillis() - lastCacheTime) < CACHE_DURATION) {
+            return cachedCategories;
+        }
+
+        cachedCategories = categoryRepository.findAll();
+        lastCacheTime = System.currentTimeMillis();
+        return cachedCategories;
+    }
+
+    /**
+     * Xóa dấu tiếng Việt
+     */
+    private String removeDiacritics(String text) {
+        if (text == null) return "";
+
+        String[] vietnameseChars = {
+                "àáạảãâầấậẩẫăằắặẳẵ", "èéẹẻẽêềếệểễ", "ìíịỉĩ", "òóọỏõôồốộổỗơờớợởỡ",
+                "ùúụủũưừứựửữ", "ỳýỵỷỹ", "đ", "ÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴ", "ÈÉẸẺẼÊỀẾỆỂỄ",
+                "ÌÍỊỈĨ", "ÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠ", "ÙÚỤỦŨƯỪỨỰỬỮ", "ỲÝỴỶỸ", "Đ"
+        };
+
+        String[] englishChars = {
+                "a", "e", "i", "o", "u", "y", "d",
+                "A", "E", "I", "O", "U", "Y", "D"
+        };
+
+        String result = text;
+        for (int i = 0; i < vietnameseChars.length; i++) {
+            for (char c : vietnameseChars[i].toCharArray()) {
+                result = result.replace(c, englishChars[i].charAt(0));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Từ khóa mặc định (fallback khi database rỗng)
+     */
+    private List<String> getDefaultKeywords() {
+        return Arrays.asList(
+                "tài liệu", "document", "văn bản", "van ban",
+                "hợp đồng", "hop dong", "báo cáo", "bao cao",
+                "hóa đơn", "hoa don", "công văn", "cong van",
+                "quyết định", "quyet dinh", "thông báo", "thong bao"
+        );
+    }
+
+    /**
+     * Lấy icon cho category
+     */
+    private String getIconForCategory(String categoryName) {
+        String name = categoryName.toLowerCase();
+        if (name.contains("hợp đồng")) return "📄";
+        if (name.contains("báo cáo")) return "📊";
+        if (name.contains("hóa đơn")) return "🧾";
+        if (name.contains("công văn")) return "📨";
+        if (name.contains("quyết định")) return "⚖️";
+        if (name.contains("thông báo")) return "🔔";
+        if (name.contains("biên bản")) return "📝";
+        if (name.contains("kế hoạch")) return "📅";
+        if (name.contains("đào tạo")) return "📖";
+        if (name.contains("kỹ thuật")) return "🔧";
+        if (name.contains("nhân sự")) return "👥";
+        if (name.contains("pháp lý")) return "⚖️";
+        return "📁";
+    }
+
+    /**
+     * Refresh cache (gọi khi category thay đổi)
+     */
+    public void refreshCategoryCache() {
+        cachedDocumentTypes = null;
+        cachedCategories = null;
+        lastCacheTime = 0;
+        System.out.println("🔄 Đã refresh cache danh mục tài liệu");
+    }
+
     // ==================== TÌM KIẾM TÀI LIỆU ====================
+
     public List<SemanticSearchResultDTO> semanticSearch(String query, double threshold, int limit) {
         System.out.println("🔍 Semantic Search: " + query);
 
@@ -86,6 +203,7 @@ public class SemanticSearchService {
     }
 
     // ==================== CHAT WITH AI ====================
+
     public ChatMessageDTO processChatWithAI(ChatRequestDTO request) {
         System.out.println("🧠 AI Chat - Nhận: " + request.getMessage());
 
@@ -95,6 +213,7 @@ public class SemanticSearchService {
         List<ChatMessage> existingMsgs = chatMessageRepository.findBySessionIdOrderByTimestampAsc(sessionId);
         boolean isNewSession = existingMsgs.isEmpty();
 
+        // Lưu câu hỏi user
         ChatMessage userMsg = ChatMessage.builder()
                 .user(user)
                 .userMessage(request.getMessage())
@@ -106,33 +225,57 @@ public class SemanticSearchService {
         ChatMessage savedUserMsg = chatMessageRepository.save(userMsg);
         System.out.println("✅ Đã lưu câu hỏi vào DB, ID: " + savedUserMsg.getId());
 
+        // Gọi AI
         Map<String, Object> aiResult = callAI(request.getMessage());
         String aiResponse = (String) aiResult.get("response");
-        if (aiResponse == null) {
-            aiResponse = createFallbackResponseText(request.getMessage());
-        }
+        String intent = (String) aiResult.getOrDefault("intent", "unknown");
+        Boolean shouldSearch = (Boolean) aiResult.getOrDefault("should_search", false);
+        String searchQuery = (String) aiResult.get("search_query");
 
-        boolean shouldSearch = true;
-        if (aiResult.get("should_search") != null) {
-            shouldSearch = (Boolean) aiResult.get("should_search");
-        }
+        System.out.println("🎯 Intent từ AI: " + intent);
+        System.out.println("🔍 should_search: " + shouldSearch);
 
+        // ===== XỬ LÝ THEO INTENT =====
         List<Document> documents = new ArrayList<>();
-        String searchKeyword = "";
+        String finalResponse;
 
-        if (shouldSearch) {
-            searchKeyword = extractKeywordFromMessage(request.getMessage());
-            documents = searchDocumentsUserCanView(user, searchKeyword);
+        switch (intent) {
+            case "security_denied":
+                finalResponse = aiResponse;
+                shouldSearch = false;
+                break;
+
+            case "greeting":
+            case "thank":
+            case "goodbye":
+            case "about_ai":
+            case "help":
+            case "permission":
+                finalResponse = aiResponse;
+                shouldSearch = false;
+                break;
+
+            case "search":
+                String keyword = searchQuery != null ? searchQuery : extractKeywordFromMessage(request.getMessage());
+                documents = searchDocumentsUserCanView(user, keyword);
+                finalResponse = buildDocumentResponse(documents, keyword, aiResponse, user);
+                break;
+
+            case "unknown":
+            default:
+                finalResponse = buildUnknownResponse(aiResponse, request.getMessage());
+                shouldSearch = false;
+                break;
         }
+
+        // Lưu response
         List<Long> documentIds = documents.stream().map(Document::getId).collect(Collectors.toList());
-
-        String finalResponse = buildDocumentResponse(documents, searchKeyword, aiResponse, user);
-
         savedUserMsg.setBotResponse(finalResponse);
         savedUserMsg.setReferencedDocumentIdList(documentIds);
         savedUserMsg.setMessageType(MessageType.BOT);
         chatMessageRepository.save(savedUserMsg);
 
+        // Trả về kết quả
         ChatMessageDTO result = new ChatMessageDTO();
         result.setContent(finalResponse);
         result.setTimestamp(LocalDateTime.now());
@@ -141,6 +284,47 @@ public class SemanticSearchService {
         result.setDocumentIds(documentIds);
 
         return result;
+    }
+
+    private String buildUnknownResponse(String aiResponse, String originalMessage) {
+        StringBuilder response = new StringBuilder();
+
+        response.append(aiResponse).append("\n\n");
+        response.append("📋 **Dưới đây là các loại tài liệu có trong hệ thống:**\n\n");
+
+        // Lấy danh sách category từ database
+        List<Category> categories = getCategories();
+
+        if (categories.isEmpty()) {
+            // Fallback nếu chưa có dữ liệu
+            response.append("   📄 Hợp đồng\n");
+            response.append("   📊 Báo cáo\n");
+            response.append("   🧾 Hóa đơn\n");
+            response.append("   📨 Công văn\n");
+            response.append("   ⚖️ Quyết định\n");
+        } else {
+            int index = 1;
+            for (Category category : categories) {
+                String icon = getIconForCategory(category.getName());
+                response.append("   ").append(index++).append(". ")
+                        .append(icon).append(" ").append(category.getName());
+
+                if (category.getDescription() != null && !category.getDescription().isEmpty()) {
+                    response.append(" - ").append(category.getDescription());
+                }
+                response.append("\n");
+            }
+        }
+
+        response.append("\n💡 **Ví dụ câu hỏi:**\n");
+        response.append("   • \"Tìm hợp đồng lao động\"\n");
+        response.append("   • \"Cho tôi xem báo cáo tài chính\"\n");
+        response.append("   • \"Tài liệu đào tạo nhân viên mới\"\n\n");
+
+        response.append("🔐 **Lưu ý:** Tôi chỉ hiển thị tài liệu bạn có quyền xem (đã duyệt + công khai).\n");
+        response.append("Hãy thử hỏi lại với nội dung cụ thể hơn nhé! 😊");
+
+        return response.toString();
     }
 
     private List<Document> getDocumentsUserCanView(User user) {
@@ -248,7 +432,7 @@ public class SemanticSearchService {
 
         if (documents.isEmpty()) {
             response.append("😞 Không tìm thấy tài liệu nào liên quan đến \"").append(keyword).append("\".\n");
-            response.append("💡 Gợi ý: Hãy thử tìm với từ khóa khác như: hợp đồng, báo cáo, hóa đơn, công văn, quyết định, thông báo, biên bản, kế hoạch, tờ trình, chỉ thị, hướng dẫn, quy chế, quy định, chính sách, hồ sơ nhân sự, hồ sơ pháp lý, tài liệu đào tạo, tài liệu kỹ thuật\n");
+            response.append("💡 Gợi ý: Hãy thử tìm với từ khóa khác.\n");
             response.append("📌 Lưu ý: Chỉ hiển thị tài liệu đã được duyệt, công khai và bạn có quyền xem.");
         } else {
             response.append("✅ Tìm thấy ").append(documents.size()).append(" tài liệu bạn có quyền xem:\n\n");
@@ -308,6 +492,7 @@ public class SemanticSearchService {
 
             Map<String, String> body = new HashMap<>();
             body.put("message", message);
+            body.put("session_id", "default");
 
             HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
 
@@ -318,12 +503,24 @@ public class SemanticSearchService {
                     Map.class
             );
 
-            return response.getBody();
+            Map<String, Object> result = response.getBody();
+            System.out.println("📨 AI Response: " + result);
+
+            if (!result.containsKey("intent")) {
+                result.put("intent", "unknown");
+            }
+            if (!result.containsKey("should_search")) {
+                result.put("should_search", false);
+            }
+
+            return result;
 
         } catch (Exception e) {
+            System.err.println("❌ Lỗi gọi AI: " + e.getMessage());
             Map<String, Object> fallback = new HashMap<>();
             fallback.put("response", createFallbackResponseText(message));
             fallback.put("should_search", false);
+            fallback.put("intent", "unknown");
             return fallback;
         }
     }
@@ -331,49 +528,42 @@ public class SemanticSearchService {
     private String createFallbackResponseText(String message) {
         String msgLower = message.toLowerCase();
         if (msgLower.contains("chào") || msgLower.contains("xin")) {
-            return "👋 Xin chào! Tôi là trợ lý AI của SmartDocs. Tôi có thể giúp bạn tìm: hợp đồng, báo cáo, hóa đơn, công văn, quyết định, thông báo, biên bản, kế hoạch, tờ trình, chỉ thị, hướng dẫn, quy chế, quy định, chính sách, hồ sơ nhân sự, hồ sơ pháp lý, tài liệu đào tạo, tài liệu kỹ thuật và nhiều hơn nữa.";
+            return "👋 Xin chào! Tôi là trợ lý AI của SmartDocs. Tôi có thể giúp bạn tìm kiếm tài liệu trong hệ thống.";
         } else if (msgLower.contains("cảm ơn")) {
             return "🙏 Không có gì! Rất vui được giúp bạn!";
         } else if (msgLower.contains("tạm biệt")) {
             return "👋 Tạm biệt bạn! Hẹn gặp lại!";
         } else {
-            return "🔍 Tôi đang tìm kiếm tài liệu " + message + " cho bạn...";
+            return "🔍 Tôi đang tìm kiếm tài liệu cho bạn...";
         }
     }
 
     private String extractKeywordFromMessage(String message) {
         String msgLower = message.toLowerCase();
 
-        for (String docType : supportedDocumentTypes) {
+        // Lấy danh sách category từ database
+        List<String> supportedTypes = getSupportedDocumentTypes();
+
+        for (String docType : supportedTypes) {
             if (msgLower.contains(docType)) {
                 System.out.println("✅ Tìm thấy từ khóa: " + docType);
                 return docType;
             }
         }
 
-        return message;
+        return null;
     }
 
-    // TÌM method này trong file Java
     public List<ChatMessageDTO> getChatHistory(String sessionId) {
         List<ChatMessage> messages = chatMessageRepository.findBySessionIdOrderByTimestampAsc(sessionId);
         List<ChatMessageDTO> history = new ArrayList<>();
 
-        // THÊM dòng này để định dạng ngày tháng
-        java.time.format.DateTimeFormatter formatter =
-                java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
         for (ChatMessage msg : messages) {
             ChatMessageDTO userDto = new ChatMessageDTO();
             userDto.setContent(msg.getUserMessage());
-
-            // SỬA: Chuyển LocalDateTime thành String (chỉ lấy ngày tháng năm)
             if (msg.getTimestamp() != null) {
-                userDto.setTimestamp(msg.getTimestamp()); // Vẫn giữ LocalDateTime
-                // HOẶC nếu DTO có field String thì dùng:
-                // userDto.setTimestampString(msg.getTimestamp().format(formatter));
+                userDto.setTimestamp(msg.getTimestamp());
             }
-
             userDto.setRole("USER");
             userDto.setSessionId(msg.getSessionId());
             history.add(userDto);
@@ -381,13 +571,9 @@ public class SemanticSearchService {
             if (msg.getBotResponse() != null && !msg.getBotResponse().isEmpty()) {
                 ChatMessageDTO botDto = new ChatMessageDTO();
                 botDto.setContent(msg.getBotResponse());
-
-                // SỬA: Chuyển LocalDateTime thành String (chỉ lấy ngày tháng năm)
                 if (msg.getTimestamp() != null) {
-                    botDto.setTimestamp(msg.getTimestamp()); // Vẫn giữ LocalDateTime
-                    // HOẶC: botDto.setTimestampString(msg.getTimestamp().format(formatter));
+                    botDto.setTimestamp(msg.getTimestamp());
                 }
-
                 botDto.setRole("BOT");
                 botDto.setSessionId(msg.getSessionId());
                 botDto.setDocumentIds(msg.getReferencedDocumentIdList());
