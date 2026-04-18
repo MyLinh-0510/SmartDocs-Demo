@@ -114,6 +114,25 @@ public class DocumentUController {
         }
     }
 
+    /*Xem file*/
+    @GetMapping("/documents/view/{meta}")
+    @ResponseBody
+    @PreAuthorize("hasAnyRole('EMPLOYEE','CEO')")
+    public ResponseEntity<Resource> viewPdf(@PathVariable String meta) {
+
+        Document doc = documentService.findByMeta(meta);
+
+        Path filePath = Paths.get("uploads/pdf").resolve(doc.getPdfFilename());
+
+        try {
+            Resource resource = new UrlResource(filePath.toUri());
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(resource);
+        } catch (Exception e) {
+            throw new RuntimeException("Không đọc được file PDF");
+        }
+    }
 
     /* pdf preview + log */
     @GetMapping("/pdf-preview/{id}")
@@ -190,8 +209,9 @@ public class DocumentUController {
                 .map(d -> new DocumentSearchDTO(
                         d.getId(),
                         d.getTitle(),
-                        d.getCategory().getName(),
-                        d.getPdfFilename()
+                        d.getCategory() != null ? d.getCategory().getName() : "",
+                        d.getPdfFilename(),
+                        d.getMeta()
                 ))
                 .toList();
     }

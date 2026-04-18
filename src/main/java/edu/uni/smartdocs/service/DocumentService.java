@@ -55,6 +55,11 @@ public class DocumentService {
         return documentRepository.findById(id);
     }
 
+    public Document findByMeta(String meta) {
+        return documentRepository.findByMeta(meta)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài liệu"));
+    }
+
     public List<Document> getLatestVisibleDocuments() {
         return documentRepository.findTop20ByIsVisibleTrueOrderByCreatedAtDesc();
     }
@@ -73,12 +78,19 @@ public class DocumentService {
         System.out.println("Repository returned " + docs.size() + " documents");
 
         return docs.stream()
-                .map(d -> new DocumentSearchDTO(
-                        d.getId(),
-                        d.getTitle(),
-                        d.getCategory().getName(),
-                        d.getPdfFilename()
-                ))
+                .map(d -> {
+                    DocumentSearchDTO dto = new DocumentSearchDTO(
+                            d.getId(),
+                            d.getTitle(),
+                            d.getCategory() != null ? d.getCategory().getName() : "",
+                            d.getPdfFilename(),
+                            d.getMeta()
+                    );
+
+                    dto.setMeta(d.getMeta());
+
+                    return dto;
+                })
                 .toList();
     }
 

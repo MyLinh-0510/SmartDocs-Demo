@@ -19,6 +19,8 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     /* BASIC */
 
+    Optional<Document> findByMeta(String meta);
+
     List<Document> findByIsVisibleTrue();
 
     Optional<Document> findById(Long id);
@@ -184,14 +186,5 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     AND FUNCTION('YEAR', d.approvedAt) = :year
 """)
     Long findMaxSoVBNumberByYear(int year);
-
-    // Tìm kiếm theo title hoặc description (không phân biệt hoa thường)
-    List<Document> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String title, String description);
-
-    // Tìm kiếm theo title
-    List<Document> findByTitleContainingIgnoreCase(String title);
-
-    // Tìm kiếm theo description
-    List<Document> findByDescriptionContainingIgnoreCase(String description);
 
 }

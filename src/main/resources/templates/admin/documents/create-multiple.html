@@ -140,34 +140,36 @@
     }
 
     /* progress */
-    .progress-container{
-      height:14px;
-      background:#eee;
-      border-radius:20px;
-      overflow:hidden;
+    .upload-overlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index:9999;
     }
 
-    #progressBar{
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,#00c853,#69f0ae);
-      box-shadow:0 0 15px rgba(0,200,83,0.6);
-      transition:width 0.2s linear;
+    .upload-card{
+      width:400px;
+      margin:180px auto;
+      background:#fff;
+      padding:30px;
+      border-radius:16px;
+      text-align:center;
+      box-shadow:0 15px 40px rgba(0,0,0,0.2);
+      animation:fadeIn 0.3s ease;
+    }
+    .fa-spinner {
+      animation: spin 1s linear infinite;
     }
 
-    /* turtle */
-    #turtle{
-      position:absolute;
-      top:-30px;
-      left:0;
-      font-size:24px;
-      transition:left 0.2s linear;
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
     }
 
-    @media(max-width:992px){
-      .file-row {
-        grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-      }
+    @keyframes fadeIn{
+      from{opacity:0; transform:translateY(20px);}
+      to{opacity:1; transform:translateY(0);}
     }
   </style>
 </head>
@@ -211,22 +213,17 @@
   </div>
 </div>
 
-<!-- Popup -->
 <div id="uploadPopup" class="upload-overlay">
-
   <div class="upload-card">
 
-    <h5>🚀 Đang upload tài liệu</h5>
-
-    <div class="progress-wrapper">
-      <div id="turtle">🐢</div>
-
-      <div class="progress-container">
-        <div id="progressBar"></div>
-      </div>
+    <div class="mb-3">
+      <i class="fa-solid fa-spinner fa-spin fa-2x text-success"></i>
     </div>
 
-    <p id="progressText">Đang chuẩn bị...</p>
+    <h5 class="mb-2">Đang tải lên tài liệu</h5>
+    <p id="progressText" class="text-muted small">
+      Vui lòng không đóng trình duyệt...
+    </p>
 
   </div>
 </div>
@@ -250,7 +247,6 @@
   const categoryOptions = document.getElementById("categoryOptions");
   const fileTypeOptions = document.getElementById("fileTypeOptions");
 
-  // ✅ FIX LỖI
   let isUploading = false;
 
   /* ================= DRAG DROP ================= */
@@ -284,7 +280,6 @@
       const div = document.createElement("div");
       div.className = "file-item";
 
-      // ✅ GẮN FILE TRỰC TIẾP
       div.file = file;
 
       div.innerHTML = `
@@ -399,16 +394,11 @@
       if(e.lengthComputable){
         const percent = Math.round((e.loaded / e.total) * 100);
 
-        document.getElementById("progressBar").style.width = percent + "%";
-        document.getElementById("turtle").style.left =
-                `calc(${percent}% - 12px)`;
-
         document.getElementById("progressText").innerText =
-                "Đang upload... " + percent + "%";
+                "Đang upload... "
       }
     };
 
-    /* ===== SUCCESS ===== */
     xhr.onload = function(){
       isUploading = false;
       btn.disabled = false;
@@ -416,10 +406,7 @@
       if(xhr.status === 200){
         const res = JSON.parse(xhr.responseText);
 
-        // 🔥 ĐẨY 100% NGAY
-        document.getElementById("progressBar").style.width = "100%";
-        document.getElementById("turtle").style.left = "calc(100% - 12px)";
-        document.getElementById("progressText").innerText = "Hoàn tất 🎉";
+        document.getElementById("progressText").innerText = "Hoàn tất";
 
         // 🚀 redirect NGAY (không delay)
         window.location.href =

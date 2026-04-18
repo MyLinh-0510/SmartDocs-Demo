@@ -58,7 +58,8 @@ public class LogDownloadServiceImpl implements LogDownloadService {
                             doc.getId(),
                             doc.getTitle(),
                             doc.getCategory() != null ? doc.getCategory().getName() : "",
-                            doc.getPdfFilename()
+                            doc.getPdfFilename(),
+                            doc.getMeta()
                     );
 
                     dto.setDownloadCount(count);

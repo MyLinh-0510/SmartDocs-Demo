@@ -108,10 +108,6 @@ public class Document {
     @JsonIgnore
     private List<UserDocumentAction> actions;
 
-    /* VERSIONING */
-    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL)
-    private List<DocumentVersion> versions;
-
     /* ==================== LIÊN KẾT AI ==================== */
 
     @OneToOne(mappedBy = "document", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

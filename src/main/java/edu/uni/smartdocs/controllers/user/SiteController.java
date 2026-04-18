@@ -68,11 +68,19 @@ public class SiteController {
             return "redirect:/user/home-page";
         }
 
+        // === SỬA Ở ĐÂY ===
+        if (keyword != null) {
+            keyword = keyword.trim();                    // bỏ khoảng trắng thừa
+            if (keyword.isEmpty()) {
+                keyword = null;                          // nếu chỉ toàn space thì coi như không có keyword
+            }
+        }
+
         List<DocumentSearchDTO> documents =
                 documentService.searchDocuments(keyword, categoryId, user);
 
         model.addAttribute("documents", documents);
-        model.addAttribute("keyword", keyword);
+        model.addAttribute("keyword", keyword);          // truyền keyword đã trim về view
         model.addAttribute("categoryId", categoryId);
 
         return "/user/documentsu/document-page";

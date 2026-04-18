@@ -299,12 +299,15 @@ a.btn:focus {
     align-items: center;
     gap: 22px;
 
-    height: 42px;
-    padding: 0 12px;
+    padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid #dcdcdc;
     background: #fff;
     box-sizing: border-box;
+}
+
+.filter-box .role-filter {
+    flex-wrap: nowrap;
 }
 
 /* focus giống input */

@@ -14,6 +14,7 @@ import edu.uni.smartdocs.repository.ChatMessageRepository;
 import edu.uni.smartdocs.repository.DocumentRepository;
 import edu.uni.smartdocs.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 import java.time.LocalDateTime;
@@ -34,6 +35,15 @@ public class SemanticSearchService {
     private List<Category> cachedCategories = null;
     private long lastCacheTime = 0;
     private static final long CACHE_DURATION = 60000; // 1 phút
+
+    private Integer extractMonth(String message) {
+        for (int i = 1; i <= 12; i++) {
+            if (message.contains("tháng " + i)) {
+                return i;
+            }
+        }
+        return null;
+    }
 
     public SemanticSearchService(DocumentRepository documentRepository,
                                  ChatMessageRepository chatMessageRepository,
@@ -208,12 +218,15 @@ public class SemanticSearchService {
         System.out.println("🧠 AI Chat - Nhận: " + request.getMessage());
 
         User user = getUser(request.getUserId());
-        String sessionId = request.getSessionId() != null ? request.getSessionId() : "session_" + System.currentTimeMillis();
+        String sessionId = request.getSessionId() != null
+                ? request.getSessionId()
+                : "session_" + System.currentTimeMillis();
 
-        List<ChatMessage> existingMsgs = chatMessageRepository.findBySessionIdOrderByTimestampAsc(sessionId);
+        List<ChatMessage> existingMsgs =
+                chatMessageRepository.findBySessionIdOrderByTimestampAsc(sessionId);
         boolean isNewSession = existingMsgs.isEmpty();
 
-        // Lưu câu hỏi user
+        // ===== Lưu câu hỏi =====
         ChatMessage userMsg = ChatMessage.builder()
                 .user(user)
                 .userMessage(request.getMessage())
@@ -222,27 +235,46 @@ public class SemanticSearchService {
                 .messageType(MessageType.USER)
                 .timestamp(LocalDateTime.now())
                 .build();
-        ChatMessage savedUserMsg = chatMessageRepository.save(userMsg);
-        System.out.println("✅ Đã lưu câu hỏi vào DB, ID: " + savedUserMsg.getId());
 
-        // Gọi AI
+        ChatMessage savedUserMsg = chatMessageRepository.save(userMsg);
+
+        // ===== Gọi AI =====
         Map<String, Object> aiResult = callAI(request.getMessage());
         String aiResponse = (String) aiResult.get("response");
         String intent = (String) aiResult.getOrDefault("intent", "unknown");
-        Boolean shouldSearch = (Boolean) aiResult.getOrDefault("should_search", false);
-        String searchQuery = (String) aiResult.get("search_query");
 
-        System.out.println("🎯 Intent từ AI: " + intent);
-        System.out.println("🔍 should_search: " + shouldSearch);
+        System.out.println("🎯 Intent: " + intent);
 
-        // ===== XỬ LÝ THEO INTENT =====
+        // ===== XỬ LÝ =====
         List<Document> documents = new ArrayList<>();
-        String finalResponse;
+        String finalResponse = "";
 
         switch (intent) {
-            case "security_denied":
-                finalResponse = aiResponse;
-                shouldSearch = false;
+
+            case "search":
+
+                // FIX 1: LẤY KEYWORD CHUẨN
+                String keyword = extractKeywordFromMessage(request.getMessage());
+
+                // FIX 2: LẤY THÁNG
+                Integer month = extractMonth(request.getMessage());
+                Integer year = null;
+
+                System.out.println("🔎 Keyword: " + keyword);
+                System.out.println("📅 Month: " + month);
+
+                int offset = 0;
+                int limit = 5;
+
+                List<Document> allResults = searchDocumentsWithTime(user, keyword, month, year, 0, Integer.MAX_VALUE);
+
+                documents = allResults.stream()
+                        .limit(limit)
+                        .toList();
+
+                boolean hasMore = allResults.size() > limit;
+
+                finalResponse = buildDocumentResponse(documents, keyword, aiResponse, user, hasMore);
                 break;
 
             case "greeting":
@@ -252,30 +284,48 @@ public class SemanticSearchService {
             case "help":
             case "permission":
                 finalResponse = aiResponse;
-                shouldSearch = false;
                 break;
 
-            case "search":
-                String keyword = searchQuery != null ? searchQuery : extractKeywordFromMessage(request.getMessage());
-                documents = searchDocumentsUserCanView(user, keyword);
-                finalResponse = buildDocumentResponse(documents, keyword, aiResponse, user);
+            case "security_denied":
+                finalResponse = aiResponse;
                 break;
 
             case "unknown":
             default:
-                finalResponse = buildUnknownResponse(aiResponse, request.getMessage());
-                shouldSearch = false;
-                break;
+
+                String fallbackKeyword = extractKeywordFromMessage(request.getMessage());
+
+                if (fallbackKeyword != null) {
+                    System.out.println("⚠️ AI fail → fallback search");
+
+                    Integer fallbackMonth = extractMonth(request.getMessage());
+
+                    documents = searchDocumentsWithTime(user, fallbackKeyword, fallbackMonth, null, 0, 5);
+
+                    boolean fallbackHasMore = documents.size() == 5;
+
+                    finalResponse = buildDocumentResponse(
+                            documents,
+                            fallbackKeyword,
+                            "🔍 Kết quả tìm kiếm:",
+                            user,
+                            fallbackHasMore
+                    );
+                }
         }
 
-        // Lưu response
-        List<Long> documentIds = documents.stream().map(Document::getId).collect(Collectors.toList());
+        // ===== Lưu response =====
+        List<Long> documentIds = documents.stream()
+                .map(Document::getId)
+                .collect(Collectors.toList());
+
         savedUserMsg.setBotResponse(finalResponse);
         savedUserMsg.setReferencedDocumentIdList(documentIds);
         savedUserMsg.setMessageType(MessageType.BOT);
+
         chatMessageRepository.save(savedUserMsg);
 
-        // Trả về kết quả
+        // ===== Response =====
         ChatMessageDTO result = new ChatMessageDTO();
         result.setContent(finalResponse);
         result.setTimestamp(LocalDateTime.now());
@@ -284,6 +334,107 @@ public class SemanticSearchService {
         result.setDocumentIds(documentIds);
 
         return result;
+    }
+
+    private String normalize(String text) {
+        if (text == null) return "";
+        return removeDiacritics(text.toLowerCase()).trim();
+    }
+
+    private boolean fuzzyMatch(String text, String keyword) {
+        if (text.contains(keyword)) return true;
+
+        String[] words = keyword.split("\\s+");
+
+        for (String word : words) {
+            if (word.length() < 2) continue;
+
+            if (text.contains(word)) return true;
+
+            for (String t : text.split("\\s+")) {
+                if (levenshteinDistance(t, word) <= 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private int levenshteinDistance(String a, String b) {
+        int[][] dp = new int[a.length() + 1][b.length() + 1];
+
+        for (int i = 0; i <= a.length(); i++) {
+            for (int j = 0; j <= b.length(); j++) {
+                if (i == 0) dp[i][j] = j;
+                else if (j == 0) dp[i][j] = i;
+                else {
+                    int cost = (a.charAt(i - 1) == b.charAt(j - 1)) ? 0 : 1;
+                    dp[i][j] = Math.min(
+                            Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1),
+                            dp[i - 1][j - 1] + cost
+                    );
+                }
+            }
+        }
+        return dp[a.length()][b.length()];
+    }
+    private List<Document> searchDocumentsWithTime(
+            User user,
+            String keyword,
+            Integer month,
+            Integer year,
+            int offset,
+            int limit) {
+
+        List<Document> allDocs = getDocumentsUserCanView(user);
+        List<Document> results = new ArrayList<>();
+
+        String keywordNorm = normalize(keyword);
+
+        for (Document doc : allDocs) {
+
+            System.out.println("👉 Checking: " + doc.getTitle());
+
+            String titleNorm = normalize(doc.getTitle());
+            String descNorm = normalize(doc.getDescription());
+            String fileNorm = normalize(doc.getFilename());
+
+            boolean matchKeyword;
+
+            if (keyword == null || keyword.isBlank()) {
+                matchKeyword = true;
+            } else {
+                matchKeyword =
+                        fuzzyMatch(titleNorm, keywordNorm) ||
+                                fuzzyMatch(descNorm, keywordNorm) ||
+                                fuzzyMatch(fileNorm, keywordNorm);
+            }
+
+            boolean matchMonth = (month == null) ||
+                    (doc.getCreatedAt() != null &&
+                            doc.getCreatedAt().getMonthValue() == month);
+
+            boolean matchYear = (year == null) ||
+                    (doc.getCreatedAt() != null &&
+                            doc.getCreatedAt().getYear() == year);
+
+            System.out.println("   matchKeyword=" + matchKeyword +
+                    ", matchMonth=" + matchMonth +
+                    ", matchYear=" + matchYear);
+
+            if (matchKeyword && matchMonth && matchYear) {
+                results.add(doc);
+            }
+        }
+
+        return results.stream()
+                .sorted(Comparator.comparing(
+                        Document::getCreatedAt,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ).reversed())
+                .skip(offset)
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     private String buildUnknownResponse(String aiResponse, String originalMessage) {
@@ -384,7 +535,7 @@ public class SemanticSearchService {
         return true;
     }
 
-    private List<Document> searchDocumentsUserCanView(User user, String keyword) {
+    private List<Document> searchDocumentsUserCanView(User user, String keyword, int offset, int limit) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return new ArrayList<>();
         }
@@ -421,24 +572,38 @@ public class SemanticSearchService {
             results = new ArrayList<>(uniqueResults);
         }
 
+        results.sort(Comparator.comparing(Document::getId).reversed());
+
         System.out.println("📄 Tìm thấy " + results.size() + " tài liệu cho từ khóa: " + keyword);
-        return results;
+
+        int start = Math.min(offset, results.size());
+        int end = Math.min(offset + limit, results.size());
+
+        if (start >= end) {
+            return new ArrayList<>();
+        }
+
+        return results.subList(start, end);
     }
 
-    private String buildDocumentResponse(List<Document> documents, String keyword, String aiResponse, User user) {
+    private String buildDocumentResponse(List<Document> documents, String keyword, String aiResponse, User user, boolean hasMore) {
         StringBuilder response = new StringBuilder();
-
-        response.append(aiResponse).append("\n\n");
 
         if (documents.isEmpty()) {
             response.append("😞 Không tìm thấy tài liệu nào liên quan đến \"").append(keyword).append("\".\n");
             response.append("💡 Gợi ý: Hãy thử tìm với từ khóa khác.\n");
             response.append("📌 Lưu ý: Chỉ hiển thị tài liệu đã được duyệt, công khai và bạn có quyền xem.");
         } else {
-            response.append("✅ Tìm thấy ").append(documents.size()).append(" tài liệu bạn có quyền xem:\n\n");
+            // CHỈ HIỂN THỊ TỐI ĐA 5 TÀI LIỆU
+            int displayLimit = 5;
+            List<Document> displayDocs = documents.size() > displayLimit
+                    ? documents.subList(0, displayLimit)
+                    : documents;
 
-            for (int i = 0; i < Math.min(documents.size(), 5); i++) {
-                Document doc = documents.get(i);
+            response.append("✨ Tìm thấy ").append(documents.size()).append(" tài liệu:\n\n");
+
+            for (int i = 0; i < displayDocs.size(); i++) {
+                Document doc = displayDocs.get(i);
 
                 String fileName = doc.getPdfFilename();
                 if (fileName == null || fileName.isEmpty()) {
@@ -461,12 +626,22 @@ public class SemanticSearchService {
                         "Nội dung đang cập nhật").append("\n");
 
                 if (fileLink != null) {
-                    response.append("   Tải xuống: <a href=\"").append(fileLink).append("\" target=\"_blank\">").append(fileName).append("</a>\n\n");
+                    response.append("   Xem chi tiết: <a href=\"").append(fileLink).append("\" target=\"_blank\">").append(fileName).append("</a>\n\n");
                 } else {
                     response.append("   Xem chi tiết: /documents/").append(doc.getId()).append("\n\n");
                 }
             }
-            response.append("💡 Click vào link để xem hoặc tải tài liệu!");
+
+            response.append("💡 Click vào link để xem hoặc tải tài liệu!\n");
+
+            // NẾU CÓ NHIỀU HƠN 5 TÀI LIỆU, THÊM LINK "XEM THÊM"
+            if (documents.size() > displayLimit) {
+                int remainingCount = documents.size() - displayLimit;
+                response.append("\n👉 **Còn ").append(remainingCount)
+                        .append(" tài liệu nữa.** <a href=\"/documents/search?keyword=")
+                        .append(keyword)
+                        .append("\" target=\"_blank\">Xem thêm...</a>");
+            }
         }
 
         return response.toString();
@@ -539,14 +714,19 @@ public class SemanticSearchService {
     }
 
     private String extractKeywordFromMessage(String message) {
-        String msgLower = message.toLowerCase();
+        if (message == null) return null;
 
-        // Lấy danh sách category từ database
+        String msgLower = message.toLowerCase();
+        String msgUnsign = removeDiacritics(msgLower);
+
         List<String> supportedTypes = getSupportedDocumentTypes();
 
         for (String docType : supportedTypes) {
-            if (msgLower.contains(docType)) {
-                System.out.println("✅ Tìm thấy từ khóa: " + docType);
+            String typeLower = docType.toLowerCase();
+            String typeUnsign = removeDiacritics(typeLower);
+
+            if (msgLower.contains(typeLower) || msgUnsign.contains(typeUnsign)) {
+                System.out.println("Tìm thấy từ khóa: " + docType);
                 return docType;
             }
         }
@@ -620,4 +800,29 @@ public class SemanticSearchService {
         }
         return defaultUser;
     }
+
+
+    @Transactional
+    public boolean deleteChatSession(String sessionId) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            System.out.println("❌ SessionId không hợp lệ");
+            return false;
+        }
+
+        try {
+            // Xóa tất cả tin nhắn thuộc session này
+            int deletedCount = chatMessageRepository.deleteBySessionId(sessionId);
+
+            System.out.println("🗑️ Đã xóa " + deletedCount + " tin nhắn của session: " + sessionId);
+
+            return deletedCount > 0;
+
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi khi xóa session " + sessionId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 }

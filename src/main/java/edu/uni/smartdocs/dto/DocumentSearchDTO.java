@@ -15,7 +15,7 @@ public class DocumentSearchDTO {
     private String category;
     private String pdfFilename;
     private Long downloadCount;
-
+    private String meta;
 
     // icon state
     private boolean favorite;
@@ -27,12 +27,14 @@ public class DocumentSearchDTO {
             Long id,
             String title,
             String category,
-            String pdfFilename
+            String pdfFilename,
+            String meta
     ) {
         this.id = id;
         this.title = title;
         this.category = category;
         this.pdfFilename = pdfFilename;
+        this.meta = meta;
     }
 
     // constructor có icon (KHÔNG count)
@@ -58,6 +60,7 @@ public class DocumentSearchDTO {
         this.category =
                 d.getCategory() != null ? d.getCategory().getName() : "";
         this.pdfFilename = d.getPdfFilename();
+        this.meta = d.getMeta(); // 🔥 THÊM DÒNG NÀY
         this.favorite = favorite;
         this.saved = saved;
         this.pinned = pinned;

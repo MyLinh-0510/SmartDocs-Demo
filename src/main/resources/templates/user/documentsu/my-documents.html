@@ -16,6 +16,8 @@
   <link rel="stylesheet" th:href="@{/css/category.css}">
   <link rel="stylesheet" th:href="@{/css/notification.css}">
   <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/ai-chatbox.css}">
+
 
   <style>
     /* ===== GLOBAL ===== */
@@ -517,6 +519,9 @@
     });
   }, 5000);
 </script>
+
+<!-- Ví dụ: HomePage -->
+<div th:replace="~{fragments/ai-chatbox :: ai-chatbox}"></div>
 
 <div th:replace="~{fragments/contact-message :: contact-message}"></div>
 <!-- Chat script -->

@@ -3,7 +3,7 @@ package edu.uni.smartdocs.controllers.user;
 import edu.uni.smartdocs.models.User;
 import edu.uni.smartdocs.service.DocumentService;
 import edu.uni.smartdocs.service.LogDownloadService;
-import edu.uni.smartdocs.service.LogDownloadService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import edu.uni.smartdocs.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +35,7 @@ public class LogDownloadController {
     }
 
     @GetMapping("/total")
+    @PreAuthorize("permitAll()")     // ← Thêm dòng này
     public long getTotalDownloads() {
         return logdownloadService.getTotalDownloads();
     }

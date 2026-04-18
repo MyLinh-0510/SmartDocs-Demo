@@ -124,8 +124,14 @@
           <option value="">-- Tất cả --</option>
           <option th:each="s : ${T(edu.uni.smartdocs.models.DocumentStatus).values()}"
                   th:value="${s}"
-                  th:text="${s}"
-                  th:selected="${status == s}">
+                  th:selected="${status == s}"
+                  th:switch="${s.name()}">
+
+            <span th:case="'DRAFT'">Bản nháp</span>
+            <span th:case="'PENDING_APPROVAL'">Chờ duyệt</span>
+            <span th:case="'APPROVED'">Đã duyệt</span>
+            <span th:case="'REJECTED'">Bị từ chối</span>
+
           </option>
         </select>
       </div>

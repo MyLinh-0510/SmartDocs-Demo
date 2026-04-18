@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
@@ -20,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -59,7 +61,7 @@ public class SecurityConfig {
 
         http
 
-                .securityMatcher("/user/**", "/", "/chat/**","/api/semantic-search/**")
+                .securityMatcher("/user/**", "/", "/chat/**","/api/**")
                 .authenticationProvider(authenticationProvider())
 
                 .csrf(csrf -> csrf
@@ -78,11 +80,16 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/user/account/login").permitAll()   // Cho phép root và login user
+                        .requestMatchers("/", "/user/account/login", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/chat/**").hasAnyRole("EMPLOYEE", "CEO")
+
+                        .requestMatchers("/api/downloads/total").hasAnyRole("EMPLOYEE", "CEO")
+
                         .requestMatchers("/user/**").hasAnyRole("EMPLOYEE", "CEO")
+
                         .requestMatchers("/api/semantic-search/**").permitAll()
                         .requestMatchers("/api/chat/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
 
@@ -157,6 +164,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/chat/**").permitAll()
 
                         .requestMatchers("/api/notifications/**").hasAnyRole("EMPLOYEE", "CEO")
+
                         .requestMatchers("/api/**").hasRole("ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

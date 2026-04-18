@@ -3,6 +3,7 @@ package edu.uni.smartdocs.controllers.api;
 import edu.uni.smartdocs.dto.request.ChatRequestDTO;
 import edu.uni.smartdocs.dto.response.ChatMessageDTO;
 import edu.uni.smartdocs.service.SemanticSearchService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
@@ -49,5 +50,20 @@ public class ChatboxController {
     @GetMapping("/sessions")
     public List<Map<String, Object>> getUserSessions(@RequestParam Long userId) {
         return chatService.getUserSessions(userId);
+    }
+
+    @DeleteMapping("/session/{sessionId}")
+    public ResponseEntity<?> deleteSession(@PathVariable String sessionId) {
+
+        // Log để debug
+        System.out.println("Đang xóa session: " + sessionId);
+
+        boolean deleted = chatService.deleteChatSession(sessionId);
+
+        if (deleted) {
+            return ResponseEntity.ok().body(Map.of("message", "Session deleted successfully"));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

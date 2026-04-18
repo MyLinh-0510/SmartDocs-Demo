@@ -276,6 +276,8 @@ public class UserServiceImpl implements UserService {
 
         List<String> errors = new ArrayList<>();
         List<User> usersToSave = new ArrayList<>();
+        Set<String> phoneSet = new HashSet<>();
+        Set<String> emailSet = new HashSet<>();
 
         try (CSVReader reader = new CSVReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
@@ -362,6 +364,22 @@ public class UserServiceImpl implements UserService {
                     errors.add("Dòng " + row + ": Mật khẩu phải có ít nhất 6 ký tự.");
                     continue;
                 }
+
+
+                // ===== CHECK TRÙNG TRONG FILE CSV =====
+                if (phoneSet.contains(phone)) {
+                    errors.add("Dòng " + row + ": Số điện thoại bị trùng trong file CSV.");
+                    continue;
+                }
+
+                if (emailSet.contains(email)) {
+                    errors.add("Dòng " + row + ": Email bị trùng trong file CSV.");
+                    continue;
+                }
+
+                // Nếu chưa trùng thì add vào set
+                phoneSet.add(phone);
+                emailSet.add(email);
 
                 User.Role role;
                 try {

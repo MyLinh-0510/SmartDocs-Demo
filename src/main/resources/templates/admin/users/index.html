@@ -30,7 +30,6 @@
         .add {
             margin-bottom: 30px;
         }
-
     </style>
 
 </head>
@@ -83,15 +82,16 @@
             <form method="get" th:action="@{/admin/users/index}">
                 <div class="row g-3">
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label>Số điện thoại</label>
                         <input type="text"
                                name="phone"
                                class="form-control"
-                               th:value="${param.phone}">
+                               th:value="${param.phone}"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label>Email</label>
                         <input type="text"
                                name="email"
@@ -100,26 +100,26 @@
                     </div>
 
                     <!-- Tìm theo vai trò -->
-                    <div class="col-md-4">
+                    <div class="col-md-5">
                         <label class="form-label">Vai trò</label>
 
                         <div class="role-filter">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="roles" value="ADMIN"
                                        th:checked="${param.roles != null and param.roles.contains('ADMIN')}">
-                                <label class="form-check-label">ADMIN</label>
+                                <label class="form-check-label">Quản trị viên</label>
                             </div>
 
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="roles" value="CEO"
                                        th:checked="${param.roles != null and param.roles.contains('CEO')}">
-                                <label class="form-check-label">CEO</label>
+                                <label class="form-check-label">Giám đốc</label>
                             </div>
 
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="roles" value="EMPLOYEE"
                                        th:checked="${param.roles != null and param.roles.contains('EMPLOYEE')}">
-                                <label class="form-check-label">EMPLOYEE</label>
+                                <label class="form-check-label">Nhân viên</label>
                             </div>
                         </div>
                     </div>

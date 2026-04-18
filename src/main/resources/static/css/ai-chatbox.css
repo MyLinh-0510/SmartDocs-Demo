@@ -26,10 +26,10 @@
 /* ===== CHAT WINDOW ===== */
 .smartdocs-ai-chat-window {
     position: fixed !important;
-    bottom: 110px !important;
+    bottom: 105px !important;   /* ← Sửa ở đây để chatbox nằm đẹp dưới nút */
     right: 30px !important;
     width: 650px !important;
-    height: 600px !important;
+    height: 620px !important;
     background: white !important;
     border-radius: 20px !important;
     box-shadow: 0 10px 40px rgba(0,0,0,0.25) !important;
@@ -37,9 +37,11 @@
     flex-direction: column !important;
     overflow: hidden !important;
     z-index: 100000 !important;
+    transition: all 0.3s ease !important;
 }
 .smartdocs-ai-chat-window.show {
     display: flex !important;
+    animation: chatPopUp 0.3s ease forwards;
 }
 
 /* ===== HEADER ===== */
@@ -90,7 +92,8 @@
 .smartdocs-ai-new-chat-btn:hover {
     background: #061660 !important;
 }
-    /* ===== SEARCH BOX ===== */
+
+/* ===== SEARCH BOX ===== */
 .smartdocs-ai-search-box {
     padding: 0 10px 10px 10px !important;
 }
@@ -103,25 +106,79 @@
 }
 
 /* ===== SESSION LIST ===== */
+/* ==================== DANH SÁCH LỊCH SỬ CUỘC TRÒ CHUYỆN ==================== */
+
 .smartdocs-ai-session-list {
-    padding: 5px !important;
+    padding: 6px 8px !important;
     overflow-y: auto !important;
 }
 
-/* ITEM */
+/* ITEM - Làm cho icon xóa nằm cùng dòng và sát phải */
 .smartdocs-ai-session-item {
-    padding: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;   /* Quan trọng nhất */
+    padding: 8px 10px !important;
     border-radius: 10px !important;
     font-size: 13px !important;
     cursor: pointer !important;
+    gap: 10px !important;                        /* Khoảng cách giữa text và nút xóa */
+    min-height: 44px !important;
 }
+
 .smartdocs-ai-session-item:hover {
     background: #061660 !important;
     color: white !important;
 }
+
 .smartdocs-ai-session-item.active {
     background: #667eea !important;
     color: white !important;
+}
+
+/* Phần chứa text (để text không bị đè lên nút xóa) */
+.session-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.session-name {
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* Icon xóa - nằm sát bên phải */
+.delete-session-btn {
+    background: none !important;
+    border: none !important;
+    font-size: 15px !important;
+    color: #dc3545 !important;
+    padding: 4px 6px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;           /* Không bị co lại */
+    opacity: 0.75 !important;
+    transition: all 0.2s !important;
+}
+
+.delete-session-btn:hover {
+    color: #ff4757 !important;
+    background: rgba(220, 53, 69, 0.15) !important;
+    opacity: 1 !important;
+    transform: scale(1.15) !important;
+}
+
+/* Khi item active thì đổi màu icon xóa cho dễ nhìn */
+.smartdocs-ai-session-item.active .delete-session-btn {
+    color: #ffe0e0 !important;
+}
+
+.smartdocs-ai-session-item.active .delete-session-btn:hover {
+    color: white !important;
+    background: rgba(255,255,255,0.2) !important;
 }
 
 /* ===== RIGHT PANEL ===== */
@@ -233,4 +290,30 @@
 @keyframes fadeInMessage {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animation mượt khi mở chat - ĐÃ THÊM */
+@keyframes chatPopUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+.chat-message-bot {
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+.chat-message-bot a {
+    color: #2196F3;
+    text-decoration: none;
+}
+.chat-message-bot a:hover {
+    text-decoration: underline;
 }

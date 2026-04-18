@@ -61,15 +61,6 @@ public class User implements Serializable {
     @com.fasterxml.jackson.annotation.JsonIgnore
     private List<UserDocumentAction> actions;
 
-    @OneToMany(mappedBy = "createdBy")
-    private List<DocumentVersion> documentVersions;
-
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(
-                new SimpleGrantedAuthority("ROLE_" + this.role.name())
-        );
-    }
-
 
     public enum Role {
         ADMIN, CEO, EMPLOYEE

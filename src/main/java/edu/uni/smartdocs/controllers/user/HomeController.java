@@ -48,12 +48,12 @@ public class HomeController {
         List<Document> docs = documentService.getLatestDocuments(user.getRole());
 
         return docs.stream()
-                .limit(10) // 🔥 HOME = 10
-                .map(doc -> new DocumentSearchDTO(
-                        doc.getId(),
-                        doc.getTitle(),
-                        doc.getCategory() != null ? doc.getCategory().getName() : "",
-                        doc.getPdfFilename()
+                .map(d -> new DocumentSearchDTO(
+                        d.getId(),
+                        d.getTitle(),
+                        d.getCategory() != null ? d.getCategory().getName() : "",
+                        d.getPdfFilename(),
+                        d.getMeta()
                 ))
                 .toList();
     }

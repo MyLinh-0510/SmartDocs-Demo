@@ -191,10 +191,12 @@ section h3 + p {
 }
 
 .doc-actions {
-    display: flex;
-    gap: 16px;
-    margin: 10px 0 6px;
-    padding-left: 2px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important; /* Đẩy nút sang trái, icon sang phải */
+    padding: 8px 4px !important;
+    margin: 8px 0 !important; /* Reset margin cũ (tránh cái margin: 8px 100px gây lỗi) */
+    width: 100% !important;
 }
 
 .doc-card h6 {
@@ -1218,4 +1220,186 @@ header, .navbar {
         opacity: 1;
     }
 }
+/* Nút Tóm tắt - Cố định để không đẩy các nút khác */
+.btn-summarize, .btn-summary {
+    background-color: #ffb300 !important;
+    color: #212529 !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 4px 10px !important;
+    white-space: nowrap !important; /* Không cho chữ xuống dòng */
+    flex-shrink: 0 !important; /* Không cho nút bị co lại */
+    transition: all 0.2s ease;
+}
 
+.btn-summarize:hover {
+    background-color: #ffa000 !important;
+    transform: translateY(-1px);
+}
+
+.action-icons-group {
+    display: flex !important;
+    gap: 10px !important; /* Khoảng cách giữa các icon */
+    align-items: center !important;
+    flex-shrink: 0 !important;
+}
+
+.modal { z-index: 1060 !important; }
+.modal-backdrop { z-index: 1050 !important; }
+
+/* Tùy chỉnh Modal Header - Sử dụng Background Gradient rực rỡ */
+#summaryModal .modal-header {
+    background: linear-gradient(135deg, #FF6B6B, #4D96FF, #22c55e); /* Sặc sỡ: Đỏ, Xanh dương, Xanh lá */
+    color: white; /* Đổi màu chữ sang trắng để dễ đọc */
+    border-bottom: none; /* Xóa viền dưới mặc định */
+}
+
+#summaryModal .modal-title {
+    font-weight: 700;
+}
+
+#summaryModal .modal-header .btn-close {
+    filter: invert(1); /* Đổi nút close sang màu trắng */
+}
+
+/* Tùy chỉnh Modal Body - Bối cảnh tối một chút để làm nổi bật Loading */
+#summaryModal .modal-body {
+    background-color: #f8f9fa; /* Màu nền trắng xám nhẹ */
+}
+
+/* BỐ CỤC CHỨA LOADING & NGÔI SAO */
+.summary-loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 0;
+    position: relative; /* Cần thiết để các ngôi sao bay xung quanh */
+}
+
+/* Hiệu ứng Spinner quay */
+.summary-spinner-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.summary-spinner {
+    width: 100%;
+    height: 100%;
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #22c55e; /* Xanh lá sặc sỡ */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Dòng chữ Loading */
+.loading-text {
+    margin-top: 20px;
+    font-size: 16px;
+    color: #1f2937;
+    font-weight: 500;
+}
+
+/* HIỆU ỨNG NGÔI SAO CHỚP TẮT (SPARKLE) */
+.sparkle-icon {
+    position: absolute;
+    color: #facc15; /* Màu vàng ngôi sao */
+    font-size: 14px;
+    opacity: 0; /* Mặc định ẩn */
+    animation: sparkle 2s ease-in-out infinite;
+}
+
+/* Các vị trí ngôi sao bay xung quanh */
+.sparkle-icon.s1 { top: 10%; left: 30%; animation-delay: 0.1s; font-size: 16px; color: #FF6B6B; }
+.sparkle-icon.s2 { top: 40%; right: 25%; animation-delay: 0.3s; font-size: 18px; color: #4D96FF; }
+.sparkle-icon.s3 { bottom: 15%; left: 40%; animation-delay: 0.5s; color: #845EF7; }
+.sparkle-icon.s4 { top: 60%; right: 40%; animation-delay: 0.7s; color: #22c55e; }
+.sparkle-icon.s5 { bottom: 35%; left: 20%; animation-delay: 0.9s; font-size: 16px; }
+
+/* Các Keyframes cho animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes sparkle {
+    0%, 100% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+/* ==================== SHARE TIME INPUT ==================== */
+#shareMinutesDisplay {
+    background-color: #f8f9fa;
+    border: 2px solid #0d6efd;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    color: #0d6efd;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    position: relative;
+}
+
+#shareMinutesDisplay:hover {
+    background-color: #e7f1ff;
+    border-color: #0b5ed7;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+#shareMinutesDisplay:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
+}
+
+/* Hiệu ứng chia vùng trái - phải để tăng/giảm */
+#shareMinutesDisplay::before,
+#shareMinutesDisplay::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40%;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#shareMinutesDisplay::before {
+    left: 0;
+    border-radius: 6px 0 0 6px;
+}
+
+#shareMinutesDisplay::after {
+    right: 0;
+    border-radius: 0 6px 6px 0;
+}
+
+/* Hover hiệu ứng vùng tăng/giảm */
+#shareMinutesDisplay:hover::before {
+    background: linear-gradient(to right, rgba(40, 167, 69, 0.08), transparent);
+}
+
+#shareMinutesDisplay:hover::after {
+    background: linear-gradient(to left, rgba(220, 53, 69, 0.08), transparent);
+}
+
+/* Tooltip hướng dẫn */
+#shareMinutesDisplay[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    pointer-events: none;
+}

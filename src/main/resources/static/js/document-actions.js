@@ -50,8 +50,27 @@ function searchDocuments() {
 
     const keyword = keywordInput.value.trim();
     const categoryId = categorySelect.value;
-    const wrapper = document.getElementById("docResultWrapper");
 
+    // === PHẦN MỚI: Cập nhật URL để thanh địa chỉ có keyword ===
+    const url = new URL(window.location.href);
+
+    if (keyword) {
+        url.searchParams.set("keyword", keyword);   // hoặc .append nếu muốn nhiều giá trị
+    } else {
+        url.searchParams.delete("keyword");
+    }
+
+    if (categoryId) {
+        url.searchParams.set("categoryId", categoryId);
+    } else {
+        url.searchParams.delete("categoryId");
+    }
+
+    // Cập nhật URL mà KHÔNG reload trang (pushState)
+    window.history.pushState({}, "", url.toString());
+    // ========================================================
+
+    const wrapper = document.getElementById("docResultWrapper");
     wrapper.innerHTML = "<div class='text-muted'>Đang tìm kiếm...</div>";
 
     const params = new URLSearchParams();
@@ -97,10 +116,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+
 /* search từ trang home */
 document.querySelectorAll(".category-card").forEach(card => {
     card.addEventListener("click", () => {
         const categoryId = card.dataset.categoryId;
+        // Sửa thành đường dẫn đúng với Controller
         window.location.href = `/user/documentsu/document-page?categoryId=${categoryId}`;
     });
 });
@@ -233,25 +254,36 @@ function viewDocument(docId) {
 
 /* Doc card lên UI và hiển thị số lần tải */
 function renderDocCard(doc, showDownloadCount = false) {
+    const viewUrl = `/user/documents/view/${doc.meta}`;
+    const downloadUrl = `/user/documents/download/${doc.id}`;
+    const previewUrl = `/user/pdf-preview/${doc.id}`;
+
     return `
 <div class="doc-card">
-    <a href="/uploads/pdf/${doc.pdfFilename || ""}"
-       target="_blank"
-       class="doc-preview-wrapper"
+    <a href="${viewUrl}" 
+       target="_blank" 
+       class="doc-preview-wrapper" 
        onclick="viewDocument(${doc.id})">
         <div class="pdf-page-frame">
-            <img src="/user/pdf-preview/${doc.id}"
-                 class="doc-preview-img"
-                 loading="lazy">
-        </div>
+            <img src="${previewUrl}" 
+                 class="doc-preview-img" 
+                 loading="lazy"
+                 onerror="this.src='/images/default-pdf.png'"> </div>
     </a>
+    
     <div class="doc-actions">
-        <i class="bi bi-star-fill ${doc.favorite ? 'active' : ''}"
-           onclick="toggleAction(${doc.id}, 'FAVORITE', this)"></i>
-        <i class="bi bi-bookmark-fill ${doc.saved ? 'active' : ''}"
-           onclick="toggleAction(${doc.id}, 'SAVED', this)"></i>
-        <i class="bi bi-pin-angle-fill ${doc.pinned ? 'active' : ''}"
-           onclick="toggleAction(${doc.id}, 'PINNED', this)"></i>      
+        <button class="btn btn-warning btn-sm me-2 btn-summarize"
+            data-id="${doc.id}" type="button">
+            Tóm tắt
+        </button>
+        <div class="action-icons-group">
+            <i class="bi bi-star-fill ${doc.favorite ? 'active' : ''}"
+               onclick="toggleAction(${doc.id}, 'FAVORITE', this)"></i>
+            <i class="bi bi-bookmark-fill ${doc.saved ? 'active' : ''}"
+               onclick="toggleAction(${doc.id}, 'SAVED', this)"></i>
+            <i class="bi bi-pin-angle-fill ${doc.pinned ? 'active' : ''}"
+               onclick="toggleAction(${doc.id}, 'PINNED', this)"></i>  
+        </div>
     </div>
     <h6 title="${doc.title}">
         ${truncateText(doc.title, 20)}
@@ -300,6 +332,18 @@ function downloadDoc(docId) {
     }, 800);
 }
 
+// Xử lý sự kiện click cho toàn trang
+document.addEventListener("click", function (e) {
+    // Nếu click vào nút có class btn-summarize
+    if (e.target.classList.contains("btn-summarize") || e.target.closest(".btn-summarize")) {
+        const btn = e.target.classList.contains("btn-summarize") ? e.target : e.target.closest(".btn-summarize");
+        const docId = btn.getAttribute("data-id");
+        if(docId) {
+            window.summarizeDoc(docId); // Gọi hàm tóm tắt
+        }
+    }
+});
+
 /* INIT (HOME) */
 document.addEventListener("DOMContentLoaded", () => {
     updateSavedTitle("FAVORITE");
@@ -308,51 +352,75 @@ document.addEventListener("DOMContentLoaded", () => {
     loadSavedDocuments();
     loadRelatedDocs();
     loadTotalDownloads();
-
-    // format thời gian chia sẻ link có thời hạn
-    const timeInput = document.getElementById("shareMinutesDisplay");
-    if (timeInput) {
-        timeInput.addEventListener("click", () => {
-            currentMinutes += 15;
-            updateDisplay();
-        });
-
-        // 🔥 SCROLL CHUỘT
-        timeInput.addEventListener("wheel", (e) => {
-            e.preventDefault(); // chặn scroll trang
-
-            if (e.deltaY < 0) {
-                currentMinutes += 15; // scroll lên
-            } else {
-                currentMinutes -= 15; // scroll xuống
-            }
-
-            if (currentMinutes < 15) currentMinutes = 15;
-
-            updateDisplay();
-        });
-    }
 });
 
 /* share tài liệu qua mail và link có thời hạn */
+let currentMinutes = 60;
 
-let shareDocId = null;
+function formatMinutes(minutes) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+
+    if (h > 0 && m > 0) return `${h} giờ ${m.toString().padStart(2, '0')} phút`;
+    if (h > 0) return `${h} giờ 00 phút`;
+    return `${m} phút`;
+}
+
+function updateDisplay() {
+    const displayEl = document.getElementById("shareMinutesDisplay");
+    const hiddenEl = document.getElementById("shareMinutes");
+
+    if (displayEl) displayEl.value = formatMinutes(currentMinutes);
+    if (hiddenEl) hiddenEl.value = currentMinutes;
+}
+
+/* Khởi tạo icon tam giác bên trong textbox */
+function initShareTimeControls() {
+    const btnPlus = document.getElementById("btnPlus");
+    const btnMinus = document.getElementById("btnMinus");
+
+    if (!btnPlus || !btnMinus) return;
+
+    btnPlus.addEventListener("click", () => {
+        currentMinutes += 5;
+        updateDisplay();
+    });
+
+    btnMinus.addEventListener("click", () => {
+        currentMinutes = Math.max(15, currentMinutes - 5);
+        updateDisplay();
+    });
+
+    // Giữ chức năng cuộn chuột trên input
+    const timeDisplay = document.getElementById("shareMinutesDisplay");
+    if (timeDisplay) {
+        timeDisplay.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                currentMinutes += 15;
+            } else {
+                currentMinutes = Math.max(15, currentMinutes - 15);
+            }
+            updateDisplay();
+        });
+    }
+}
 
 /* Mở modal chia sẻ */
 function openShareModal(docId) {
     shareDocId = docId;
-
-    currentMinutes = 60; // reset
+    currentMinutes = 60;
     updateDisplay();
 
     document.getElementById("shareEmailBox").style.display = "none";
     document.getElementById("shareLinkBox").style.display = "none";
-
     document.getElementById("btnShareEmail").classList.remove("active");
     document.getElementById("btnShareLink").classList.remove("active");
 
     const modal = new bootstrap.Modal(document.getElementById("shareModal"));
     modal.show();
+
+    setTimeout(initShareTimeControls, 400);
 }
 
 /* Đổi trạng thái nút */
@@ -371,23 +439,6 @@ function showShareEmail() {
 function showShareLink() {
     document.getElementById("shareEmailBox").style.display = "none";
     document.getElementById("shareLinkBox").style.display = "block";
-}
-
-/* Format số phút chia sẻ */
-let currentMinutes = 60;
-
-function formatMinutes(minutes) {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-
-    if (h > 0 && m > 0) return `${h} giờ ${m.toString().padStart(2, '0')} phút`;
-    if (h > 0) return `${h} giờ 00 phút`;
-    return `${m} phút`;
-}
-
-function updateDisplay() {
-    document.getElementById("shareMinutesDisplay").value = formatMinutes(currentMinutes);
-    document.getElementById("shareMinutes").value = currentMinutes;
 }
 
 /* ============= GỬI TÀI LIỆU QUA EMAIL ============= */
@@ -535,3 +586,52 @@ function showMessage(msg, isSuccess = true) {
         box.style.display = "none";
     }, 2500);
 }
+
+// Đảm bảo hàm summarizeDoc có thể được gọi từ bất cứ đâu
+window.summarizeDoc = function(docId) {
+    const modalEl = document.getElementById('summaryModal');
+    if (!modalEl) return;
+
+    // 1. Reset Modal Title và thay icon bằng màu trắng
+    const titleEl = modalEl.querySelector('.modal-title');
+    if (titleEl) {
+        titleEl.innerHTML = `<i class="bi bi-file-earmark-text text-white me-2"></i>Tóm tắt nội dung`;
+    }
+
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    const content = document.getElementById("summaryContent");
+
+    // 2. Cập nhật HTML Loading - Thêm bố cục và các ngôi sao Bootstrap Icon
+    content.innerHTML = `
+        <div class="summary-loading-container">
+            <div class="summary-spinner-wrapper">
+                <div class="summary-spinner"></div>
+            </div>
+            
+            <i class="bi bi-star-fill sparkle-icon s1"></i>
+            <i class="bi bi-star-fill sparkle-icon s2"></i>
+            <i class="bi bi-star-fill sparkle-icon s3"></i>
+            <i class="bi bi-sparkles sparkle-icon s4"></i>
+            <i class="bi bi-star-fill sparkle-icon s5"></i>
+            
+            <p class="loading-text mt-3">AI đang tóm tắt tài liệu...</p>
+        </div>`;
+
+    fetch(`/user/summarize/${docId}`, {
+        method: "GET",
+        credentials: "same-origin"
+    })
+        .then(res => res.json())
+        .then(data => {
+            let summary = data.summary || "Không có nội dung";
+
+            content.innerHTML = `
+        <div style="white-space: pre-line; color: #1f2937;">
+            ${summary}
+        </div>`;
+        })
+
+};
+

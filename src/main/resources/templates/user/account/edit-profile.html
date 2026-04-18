@@ -19,6 +19,8 @@
   <link rel="stylesheet" th:href="@{/css/notification.css}">
   <link rel="stylesheet" th:href="@{/css/style.css}">
   <link rel="stylesheet" th:href="@{/css/profile.css}">
+  <link rel="stylesheet" th:href="@{/css/ai-chatbox.css}">
+
 </head>
 
 <body>
@@ -136,6 +138,9 @@
 
   </form>
 </div>
+
+<!-- Ví dụ: HomePage -->
+<div th:replace="~{fragments/ai-chatbox :: ai-chatbox}"></div>
 
 <div th:replace="~{fragments/contact-message :: contact-message}"></div>
 <!-- Chat script -->

@@ -6,31 +6,22 @@
   <!-- Chat window AI -->
   <div class="smartdocs-ai-chat-window" id="aiChatWindow">
     <div class="smartdocs-ai-chat-header">
-
       <div style="display:flex;align-items:center;gap:10px;">
         <button id="toggleSidebarBtn" class="toggle-sidebar-btn">☰</button>
         <span>🤖 SmartDocs AI Assistant</span>
       </div>
-
       <span id="aiCloseChatBtn" style="cursor:pointer;">✕</span>
     </div>
 
     <div class="smartdocs-ai-chat-main-area">
-
       <!-- Sidebar -->
       <div class="smartdocs-ai-chat-sidebar">
-
         <button class="smartdocs-ai-new-chat-btn" id="aiNewChatBtn">
           + Cuộc trò chuyện mới
         </button>
 
-        <!-- 🔍 SEARCH (đã đặt đúng vị trí) -->
         <div class="smartdocs-ai-search-box">
-          <input
-                  type="text"
-                  id="aiSearchInput"
-                  placeholder="🔍 Tìm cuộc trò chuyện..."
-          >
+          <input type="text" id="aiSearchInput" placeholder="🔍 Tìm cuộc trò chuyện...">
         </div>
 
         <div class="smartdocs-ai-session-list" id="aiSessionList"></div>
@@ -39,14 +30,12 @@
       <!-- Right Panel -->
       <div class="smartdocs-ai-chat-right-panel">
         <div class="smartdocs-ai-chat-messages" id="aiChatMessages">
-
           <div class="smartdocs-ai-message bot">
             <div class="smartdocs-ai-message-bubble">
               👋 Chào bạn! Tôi là trợ lý AI của SmartDocs.<br>
               Hãy hỏi tôi về tài liệu, hợp đồng, văn bản nhé!
             </div>
           </div>
-
         </div>
 
         <div class="smartdocs-ai-chat-input-area">
@@ -54,7 +43,6 @@
           <button id="aiSendBtn">Gửi</button>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -77,7 +65,6 @@
       const toggleBtn       = document.getElementById('toggleSidebarBtn');
 
       let allSessions = [];
-
       let currentSessionId = localStorage.getItem('ai_chat_session_id') ||
               'ai_session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
@@ -98,12 +85,9 @@
       function addMessageToUI(content, isUser, timestamp) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `smartdocs-ai-message ${isUser ? 'user' : 'bot'}`;
-
         const bubble = document.createElement('div');
         bubble.className = 'smartdocs-ai-message-bubble';
         bubble.innerHTML = content.replace(/\n/g, '<br>');
-
-
         messageDiv.appendChild(bubble);
         chatMessages.appendChild(messageDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -130,6 +114,69 @@
         if (typing) typing.remove();
       }
 
+      // ==================== RENDER SESSIONS VỚI NÚT XÓA ====================
+      function renderSessions(sessions) {
+        sessionListDiv.innerHTML = '';
+
+        if (!sessions || sessions.length === 0) {
+          sessionListDiv.innerHTML = '<div style="padding:12px;color:#999;text-align:center;font-size:0.9rem;">Chưa có cuộc trò chuyện nào</div>';
+          return;
+        }
+
+        sessions.forEach(s => {
+          const item = document.createElement('div');
+          item.className = `smartdocs-ai-session-item ${s.sessionId === currentSessionId ? 'active' : ''}`;
+
+          // Tạo cấu trúc item với icon xóa sát bên phải
+          item.innerHTML = `
+              <div class="session-content">
+                  <span class="session-name">${s.sessionName || 'Cuộc trò chuyện mới'}</span>
+              </div>
+              <button class="delete-session-btn" title="Xóa cuộc trò chuyện này">
+                  <i class="bi bi-trash3"></i>
+              </button>
+          `;
+
+          // Click vào phần nội dung (tên) → chuyển session
+          item.querySelector('.session-content').addEventListener('click', (e) => {
+            switchSession(s.sessionId);
+          });
+
+          // Click nút xóa
+          item.querySelector('.delete-session-btn').addEventListener('click', (e) => {
+            e.stopPropagation();   // Ngăn không chuyển session khi click xóa
+            if (confirm(`Bạn có chắc muốn xóa cuộc trò chuyện "${s.sessionName || 'này'}" không?`)) {
+              deleteSession(s.sessionId);
+            }
+          });
+
+          sessionListDiv.appendChild(item);
+        });
+      }
+
+      // ==================== XÓA MỘT SESSION ====================
+      async function deleteSession(sessionIdToDelete) {
+        try {
+          const res = await fetch(`/api/chat/session/${sessionIdToDelete}`, {
+            method: 'DELETE'
+          });
+
+          if (res.ok) {
+            // Nếu đang xóa session hiện tại → tạo session mới
+            if (sessionIdToDelete === currentSessionId) {
+              newChat();
+            } else {
+              loadSessions();           // reload danh sách
+            }
+          } else {
+            alert("Không thể xóa cuộc trò chuyện này!");
+          }
+        } catch (err) {
+          console.error('Delete session error:', err);
+          alert("Lỗi khi xóa cuộc trò chuyện!");
+        }
+      }
+
       // ==================== API ====================
       async function loadChatHistory() {
         try {
@@ -149,41 +196,12 @@
         try {
           const res = await fetch(`/api/chat/sessions?userId=${currentUserId}`);
           const sessions = await res.json();
-
-          allSessions = sessions;
-          renderSessions(sessions);
-
+          allSessions = sessions || [];
+          renderSessions(allSessions);
         } catch (e) {
           console.error('Load sessions error:', e);
         }
       }
-
-      function renderSessions(sessions) {
-        sessionListDiv.innerHTML = '';
-
-        if (sessions && sessions.length > 0) {
-          sessions.forEach(s => {
-            const item = document.createElement('div');
-            item.className = `smartdocs-ai-session-item ${s.sessionId === currentSessionId ? 'active' : ''}`;
-            item.textContent = s.sessionName || 'Cuộc trò chuyện';
-            item.onclick = () => switchSession(s.sessionId);
-            sessionListDiv.appendChild(item);
-          });
-        } else {
-          sessionListDiv.innerHTML = '<div style="padding:10px;color:#999;text-align:center;">Không tìm thấy</div>';
-        }
-      }
-
-      // 🔍 SEARCH REALTIME
-      searchInput.addEventListener('input', () => {
-        const keyword = searchInput.value.toLowerCase();
-
-        const filtered = allSessions.filter(s =>
-                (s.sessionName || '').toLowerCase().includes(keyword)
-        );
-
-        renderSessions(filtered);
-      });
 
       function switchSession(newId) {
         if (newId === currentSessionId) return;
@@ -219,47 +237,63 @@
           const res = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              message: question,
-              userId: currentUserId,
-              sessionId: currentSessionId
-            })
+            body: JSON.stringify({ message: question, userId: currentUserId, sessionId: currentSessionId })
           });
 
           const data = await res.json();
           hideTyping();
-
           addMessageToUI(data.content || '❌ Lỗi', false);
           loadSessions();
-
         } catch (err) {
           hideTyping();
           addMessageToUI('❌ Lỗi server', false);
         }
       }
 
-      // ==================== EVENTS ====================
-      floatingBtn.onclick = () => {
-        const isShown = chatWindow.classList.contains('show');
+      // ==================== MỞ / ĐÓNG CHAT ====================
+      function openChat() {
+        chatWindow.classList.add('show');
+        loadChatHistory();
+        loadSessions();
+      }
 
-        if (!isShown) {
-          chatWindow.classList.add('show');
-          loadChatHistory();
-          loadSessions();
+      function closeChat() {
+        chatWindow.classList.remove('show');
+      }
+
+      floatingBtn.onclick = () => {
+        if (chatWindow.classList.contains('show')) {
+          closeChat();
         } else {
-          chatWindow.classList.remove('show');
+          openChat();
         }
       };
 
-      closeBtn.onclick = () => chatWindow.classList.remove('show');
+      closeBtn.onclick = closeChat;
 
+      document.addEventListener('click', function(e) {
+        if (!floatingBtn.contains(e.target) && !chatWindow.contains(e.target)) {
+          if (chatWindow.classList.contains('show')) closeChat();
+        }
+      });
+
+      chatWindow.addEventListener('click', (e) => e.stopPropagation());
+
+      // Event listeners
       sendBtn.onclick = sendMessage;
-
       questionInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
       });
-
       newChatBtn.onclick = newChat;
+
+      // Tìm kiếm
+      searchInput.addEventListener('input', () => {
+        const keyword = searchInput.value.toLowerCase();
+        const filtered = allSessions.filter(s =>
+                (s.sessionName || '').toLowerCase().includes(keyword)
+        );
+        renderSessions(filtered);
+      });
 
     });
   </script>
